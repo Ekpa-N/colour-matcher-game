@@ -47,9 +47,9 @@ export default function Home() {
       {({ defaultPatternError, defaultPattern, defaultPatterns, playerPatterns, makeSwitch, makeSwitchToo, playerOneSwitch, playerTwoSwitch, resetDefault, playerOnePattern, playerTwoPattern, playerOnePatternError, playerTwoPatternError }) => {
 
         return (
-          <main className="flex min-h-screen flex-col gap-[20px] items-center justify-center p-4">
+          <main className="flex min-h-screen flex-col gap-[20px] items-center justify-center p-2">
             <button onClick={() => { resetDefault() }} className="border p-2 rounded">Reset Default</button>
-            <div className="flex gap-[20px]">
+            <div className="flex flex-col w-[100%] md:flex-row md:justify-around gap-[20px]">
               <ColourMatcher makeSwitchToo={makeSwitchToo} makeSwitch={makeSwitch} defaultColours={defaultPatternError} player={1} playerColours={playerOnePatternError} toSwitch={playerOneSwitch} />
               <ColourMatcher makeSwitchToo={makeSwitchToo} makeSwitch={makeSwitch} defaultColours={defaultPatternError} player={2} playerColours={playerTwoPatternError} toSwitch={playerTwoSwitch} />
             </div>

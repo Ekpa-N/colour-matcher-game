@@ -29,8 +29,8 @@ const ColourMatcher: React.FC<ColourProps> = ({ defaultColours=[], player, playe
 
     if(type == "default") {
         return (
-            <div className="border border-black w-[300px] flex p-2 flex-col">
-                <h2>Player {player}</h2>
+            <div className="border border-[green] w-[300px] flex p-2 flex-col">
+                <h2 className="self-center font-[500]">Player {player}</h2>
                 <div className="flex justify-between mt-[100px]">
                     {defaultColours.map((colour, idx) => {
                         return (
