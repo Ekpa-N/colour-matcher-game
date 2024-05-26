@@ -9,16 +9,19 @@ import { collection, addDoc, getDocs, limit, query, where, doc, updateDoc, setDo
 
 export default function Registration() {
     const [formData, setFormData] = useState<{ name: string, center: string, phone: string }>({ name: "", center: "", phone: "" })
+    const [isLoading, setIsLoading] = useState<boolean>(false)
 
     async function handleSubmit(e: any) {
         e.preventDefault()
+        setIsLoading(true)
         await setDoc(doc(db, "registration", formData.phone), {
             name: formData.name,
             center: formData.center,
             phone: formData.phone
         });
-
+        
         setFormData({ name: "", center: "", phone: "" })
+        setIsLoading(false)
     }
 
     function handleChange(e:any) {
@@ -36,7 +39,7 @@ export default function Registration() {
                             <input onChange={(e)=>{handleChange(e)}} value={formData.center} name="center" className="outline-none border w-full" />
                             <label htmlFor="phone">PHONE</label>
                             <input onChange={(e)=>{handleChange(e)}} value={formData.phone} name="phone" className="outline-none border w-full" />
-                            <button onClick={(e)=>{handleSubmit(e)}}>Submit</button>
+                            <button disabled={isLoading} className="border p-4 w-fit self-center rounded" onClick={(e)=>{handleSubmit(e)}}>{isLoading ? "Uploading" : "Submit"}</button>
                         </form>
                     </main>
                 )
