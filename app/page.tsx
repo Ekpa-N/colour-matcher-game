@@ -5,7 +5,7 @@ import AppContext from "@/components/Provider";
 import { useEffect, useState } from "react";
 
 export default function Home() {
-  const [timer, setTimer] = useState<{ ms: number, s: number, m: number }>({ ms: 0, s: 0, m: 2 })
+  const [timer, setTimer] = useState<{ ms: number, s: number, m: number }>({ ms: 0, s: 0, m: 1 })
   const [countdown, setIsCountdown] = useState<boolean>(false)
 
 
