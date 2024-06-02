@@ -31,16 +31,16 @@ export default function PlayerHome() {
     if (docSnap.exists()) {
       players = docSnap.data().players
       const currentPlayer = players.find(player => player.id == playerId)
-      // if (currentPlayer) {
-      //   const socket = io(`${process.env.api}:3002`, {
-      //     query: {
-      //       customId: playerId,
-      //       nickname: nickname,
-      //       roomId: roomId
-      //     }
-      //   })
-      //   return
-      // }
+      if (currentPlayer) {
+        // const socket = io(`${process.env.api}:3002`, {
+        //   query: {
+        //     customId: playerId,
+        //     nickname: nickname,
+        //     roomId: roomId
+        //   }
+        // })
+        return
+      }
       localStorage.removeItem("colourMatcherPlayerData")
       router.push("/")
       return
