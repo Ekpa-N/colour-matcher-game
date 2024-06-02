@@ -5,6 +5,7 @@ import { db } from '../firebase/index'
 import { collection, addDoc, getDocs, limit, query, where, doc, updateDoc, setDoc, getDoc, startAt, startAfter, getCountFromServer, serverTimestamp, endBefore, onSnapshot } from "firebase/firestore";
 import useSWR, { mutate } from "swr";
 import useSWRSubscription from 'swr/subscription'
+import { GoogleLogin } from '@react-oauth/google';
 
 type LayoutWrapperProps = {
     children: ReactNode;
@@ -28,43 +29,8 @@ const LayoutWrapper: React.FC<LayoutWrapperProps> = ({ children }) => {
     const [playerTwoSwitch, setPlayerTwoSwitch] = useState<{ first: number }>({ first: 5 })
     const [sideEffect, setSideEffect] = useState<number>(0)
     const [isOpen, setIsOpen] = useState<boolean>(false)
-    // const [mobileView, setMobileView] = useState<boolean | undefined>()
 
-
-    // useEffect(() => {
-    //     if (playerOnePattern) {
-    //         console.log("added")
-    //         setPlayerPatterns({ ...playerPatterns, one: playerOnePattern })
-    //     }        
-    // }, [playerOnePattern])
-
-    // const unsub = onSnapshot(doc(db, "colours", "defaultPattern"), (doc) => {
-    //     console.log("Template data: ", doc.data());
-    //     if(doc.data()) {
-    //         setDefaultPatterns(doc.data()?.pattern)
-    //     }
-    // });
-    // const playerOneSwitched = onSnapshot(doc(db, "colours", "playerone"), (doc) => {
-    //     if(doc.data()) {
-    //         console.log("player 1 data: ", doc.data());
-    //         setPlayerPatterns({...playerPatterns, one:doc.data()?.pattern})
-    //     }
-    // });
-    // const playerTwoSwitched = onSnapshot(doc(db, "colours", "playertwo"), (doc) => {
-    //     if(doc.data()) {
-    //         // console.log("player 2 data: ", doc.data());
-    //         setPlayerPatterns({...playerPatterns, two:doc.data()?.pattern})
-    //     }
-    // });
-
-    // const queryChange = query(collection(db, "colours"));
-    // const unsubscribe = onSnapshot(queryChange, (querySnapshot) => {
-    //     const colors:any = [];
-    //     querySnapshot.forEach((doc) => {
-    //         colors.push(doc.data().pattern);
-    //     });
-    //     console.log("Change", colors);
-    // });
+    
 
     function shuffleArray(arr: string[]): string[] {
         let shuffledArray = arr.slice(); // Create a copy of the array to avoid mutating the original

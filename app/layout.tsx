@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import LayoutWrapper from "@/components/LayoutWrapper";
+import { GoogleOAuthProvider } from '@react-oauth/google';
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -15,12 +16,13 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+
   return (
     <html lang="en">
       <body className={inter.className}>
-        <LayoutWrapper>
+        <GoogleOAuthProvider clientId="649250726123-e4lcomctodo7sp27eukcs20u873be7rs.apps.googleusercontent.com">
           {children}
-        </LayoutWrapper>
+        </GoogleOAuthProvider>
       </body>
     </html>
   );
