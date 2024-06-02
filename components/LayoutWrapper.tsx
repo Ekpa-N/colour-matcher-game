@@ -6,13 +6,9 @@ type LayoutWrapperProps = {
 
 
 const LayoutWrapper: React.FC<LayoutWrapperProps> = ({ children }) => {
-   
     return (
         <div className={`flex flex-col`}>
-            
-            <div>
-                {children}
-            </div>
+            {children}
         </div>
     )
 };

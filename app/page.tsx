@@ -3,7 +3,7 @@ import { GoogleLogin } from '@react-oauth/google';
 import { io } from 'socket.io-client';
 import { ReactEventHandler, useEffect, useState } from 'react';
 import { generateRandomString, copyToClipboard, shuffleArray } from '@/components/helpers';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import axios from 'axios';
 import { v4 as uuidv4 } from "uuid"
 import { db } from '@/firebase';

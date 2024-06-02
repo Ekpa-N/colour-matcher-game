@@ -4,11 +4,10 @@ import ColourMatcher from "@/components/ColourMatcher";
 import AppContext from "@/components/Provider";
 import { useEffect, useState, useRef, ReactEventHandler, ReactHTMLElement } from "react";
 import { io } from 'socket.io-client';
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { db } from '@/firebase';
 import { useSubscription } from "@/hooks/customHooks";
 import { collection, addDoc, getDocs, limit, query, where, doc, updateDoc, setDoc, getDoc, startAt, startAfter, getCountFromServer, serverTimestamp, endBefore, onSnapshot } from "firebase/firestore";
-import { Suspense } from "react";
 
 
 export default function PlayerHome() {
@@ -108,7 +107,6 @@ export default function PlayerHome() {
 
   return (
     <main className="flex min-h-screen flex-col gap-[20px] items-center justify-center p-2">
-      <Suspense fallback={<p>Loading feed...</p>}>
         <h2 className={`p-2 border rounded-[10px] font-[700] flex justify-center items-center text-center h-[60px] w-[250px]`}>
           {`${isWon ? "You have won this round" : turn ? "Your turn" : ""}`}
         </h2>
@@ -119,14 +117,6 @@ export default function PlayerHome() {
         </div>
 
         <button onClick={() => { play() }} className="border p-2 rounded mt-[20px]">Play Pattern</button>
-
-      </Suspense>
     </main>
   )
-  // return (
-  //   <AppContext.Consumer>
-  //     {({ defaultPatternError, defaultPattern, defaultPatterns, playerPatterns, makeSwitch, makeSwitchToo, playerOneSwitch, playerTwoSwitch, resetDefault, playerOnePattern, playerTwoPattern, playerOnePatternError, playerTwoPatternError }) => {
-  //     }}
-  //   </AppContext.Consumer>
-  // )
 }
