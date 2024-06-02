@@ -150,8 +150,7 @@ export default function HomePage() {
 
 
   return (
-    <main className="flex min-h-screen flex-col gap-[20px] items-center justify-center p-2">
-      <Suspense fallback={<p>Loading feed...</p>}>
+    <main className="flex min-h-screen flex-col gap-[20px] items-center justify-center p-2">      
         <form onSubmit={createNewGame} className={`${gameState == "new" ? "flex" : "hidden"} flex-col p-2 border border-[green] w-[400px] items-start box-border`}>
           <h2 className="self-center">Welcome to Colour Matcher</h2>
           <label className="border w-full" htmlFor="username">Nickname</label>
@@ -187,7 +186,6 @@ export default function HomePage() {
         </form>
         {/* <button onClick={()=>{testSocketConnection()}}>test</button> */}
 
-      </Suspense>
 
     </main>
   )
