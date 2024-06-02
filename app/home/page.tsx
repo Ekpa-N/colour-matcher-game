@@ -7,6 +7,7 @@ import { io } from 'socket.io-client';
 import { useRouter } from "next/navigation";
 import { db } from '@/firebase';
 import { useSubscription } from "@/hooks/customHooks";
+import { shuffleArray } from "@/components/helpers";
 import { collection, addDoc, getDocs, limit, query, where, doc, updateDoc, setDoc, getDoc, startAt, startAfter, getCountFromServer, serverTimestamp, endBefore, onSnapshot } from "firebase/firestore";
 
 
@@ -117,13 +118,15 @@ export default function PlayerHome() {
     const gameDoc = await getDoc(dataRef)
     if (gameDoc.exists()) {
       const thePlayers = gameDoc.data().players
+      const newDefault = shuffleArray(gameDoc.data().default)
       const playsReset = thePlayers.map((player: any) => {
         player.played = ["", "", "", ""]
         return player
       })
       await updateDoc(dataRef, {
         players: playsReset,
-        turn: "0"
+        turn: "0",
+        default: newDefault
       })
       console.log("Reset")
     }
