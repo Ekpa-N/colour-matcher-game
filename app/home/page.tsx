@@ -14,8 +14,8 @@ export default function PlayerHome() {
   const [localData, setLocalData] = useState<any>({ nickname: "", playerId: "", url: "", roomId: "12345678" })
   const router = useRouter()
   // const searchParams = useSearchParams()
-  const [pattern, setPattern] = useState<string[]>(["red", "blue", "green", "yellow", "purple", "black"])
-  const [currentPattern, setCurrentPattern] = useState<string[]>(["", "", "", "", "", ""])
+  const [pattern, setPattern] = useState<string[]>(["red", "blue", "green", "yellow"])
+  const [currentPattern, setCurrentPattern] = useState<string[]>(["", "", "", ""])
   const [toChange, setToChange] = useState<string>("")
   const [isWon, setIsWon] = useState<boolean>(false)
   const [turn, setTurn] = useState<any>()
@@ -111,7 +111,7 @@ export default function PlayerHome() {
     if(gameDoc.exists()) {
       const thePlayers = gameDoc.data().players
       const playsReset = thePlayers.map((player:any)=>{
-        player.played = ["","","","","",""]
+        player.played = ["","","",""]
         return player
       })
       await updateDoc(dataRef, {

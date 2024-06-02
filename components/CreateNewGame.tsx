@@ -18,7 +18,7 @@ export default function CreateGamePage() {
     const [gameState, setGameState] = useState<string>("")
     const [room, setRoom] = useState<string>("")
     const router = useRouter()
-    const pattern = ["red", "green", "blue", "yellow", "black", "purple"]
+    const pattern = ["red", "green", "blue", "yellow"]
     const [isCreated, setIsCreated] = useState<boolean>(false)
 
 
@@ -49,7 +49,7 @@ export default function CreateGamePage() {
         const newGameData = {
             document: roomId,
             defaultPattern: defaultShuffle,
-            player: [{ id: playerID, pattern: shuffledPattern, nickname: gameDetails.nickname, played: ["", "", "", "", "", ""] }],
+            player: [{ id: playerID, pattern: shuffledPattern, nickname: gameDetails.nickname, played: ["", "", "", ""] }],
             isNew: true
         }
         try {
@@ -83,7 +83,7 @@ export default function CreateGamePage() {
         const newGameData = {
             document: room,
             defaultPattern: [],
-            player: { id: playerID, pattern: shuffledPattern, nickname: gameDetails.nickname, played: ["", "", "", "", "", ""] },
+            player: { id: playerID, pattern: shuffledPattern, nickname: gameDetails.nickname, played: ["", "", "", ""] },
             isNew: false
         }
         try {
