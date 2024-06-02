@@ -27,15 +27,15 @@ export default function HomePage() {
     setGameDetails({ ...gameDetails, [e.target.name]: e.target.value })
   }
 
-  function testSocketConnection() {
-    const socket = io(`${process.env.api}:3002` || "", {
-      query: {
-        customId: "customID",
-        nickname: "nickname",
-        roomId: "roomID"
-      }
-    })
-  }
+  // function testSocketConnection() {
+  //   const socket = io(`${process.env.api}:3002` || "", {
+  //     query: {
+  //       customId: "customID",
+  //       nickname: "nickname",
+  //       roomId: "roomID"
+  //     }
+  //   })
+  // }
 
   async function createNewGame(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -69,13 +69,6 @@ export default function HomePage() {
         console.error('Unexpected error:', error);
       }
     }
-    // const socket = io(`${process.env.api}:3002` || "", {
-    //   query: {
-    //     customId: playerID,
-    //     nickname: gameDetails.nickname,
-    //     roomId: roomId
-    //   }
-    // })
     setShareLink(`${process.env.api}:3000?id=${roomId}`)
     localStorage.setItem("colourMatcherPlayerData", JSON.stringify({ roomId: roomId, playerId: playerID, url: `${process.env.apiToo}:3000?id=${roomId}`, nickname: gameDetails.nickname }))
     setIsCreated(true)
@@ -116,8 +109,8 @@ export default function HomePage() {
 
   async function checkExistingGameData({ roomId, playerId }: { roomId: string, playerId: string }) {
     let players: any[] = []
-    const game = searchParams.has("id")
-    const id = searchParams.get("id") as string
+    // const game = searchParams.has("id")
+    // const id = searchParams.get("id") as string
     const docRef = doc(db, "games", roomId);
     const docSnap = await getDoc(docRef);
     if (docSnap.exists()) {

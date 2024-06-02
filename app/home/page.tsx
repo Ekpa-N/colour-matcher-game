@@ -5,21 +5,16 @@ import AppContext from "@/components/Provider";
 import { useEffect, useState, useRef, ReactEventHandler, ReactHTMLElement } from "react";
 import { io } from 'socket.io-client';
 import { useRouter, useSearchParams } from "next/navigation";
-import { v4 as uuidv4 } from "uuid"
-import { ReactSortable } from "react-sortablejs";
-import Sortable from "sortablejs"
 import { db } from '@/firebase';
-import useSWRSubscription from 'swr/subscription'
 import { useSubscription } from "@/hooks/customHooks";
 import { collection, addDoc, getDocs, limit, query, where, doc, updateDoc, setDoc, getDoc, startAt, startAfter, getCountFromServer, serverTimestamp, endBefore, onSnapshot } from "firebase/firestore";
-import { isIdentical } from "@/components/helpers";
 import { Suspense } from "react";
 
 
 export default function PlayerHome() {
   const [localData, setLocalData] = useState<any>({ nickname: "", playerId: "", url: "", roomId: "12345678" })
   const router = useRouter()
-  const searchParams = useSearchParams()
+  // const searchParams = useSearchParams()
   const [pattern, setPattern] = useState<string[]>(["red", "blue", "green", "yellow", "purple", "black"])
   const [currentPattern, setCurrentPattern] = useState<string[]>(["", "", "", "", "", ""])
   const [toChange, setToChange] = useState<string>("")
@@ -28,8 +23,8 @@ export default function PlayerHome() {
 
   async function checkExistingGameData({ roomId, playerId, nickname }: { roomId: string, playerId: string, nickname: string }) {
     let players: any[] = []
-    const game = searchParams.has("id")
-    const id = searchParams.get("id") as string
+    // const game = searchParams.has("id")
+    // const id = searchParams.get("id") as string
     const docRef = doc(db, "games", roomId);
     const docSnap = await getDoc(docRef);
     if (docSnap.exists()) {
