@@ -7,6 +7,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import axios from 'axios';
 import { v4 as uuidv4 } from "uuid"
 import { db } from '@/firebase';
+import { Suspense } from 'react'
 import { collection, addDoc, getDocs, limit, query, where, doc, updateDoc, setDoc, getDoc, startAt, startAfter, getCountFromServer, serverTimestamp, endBefore } from "firebase/firestore";
 
 
@@ -49,7 +50,7 @@ export default function HomePage() {
     const newGameData = {
       document: roomId,
       defaultPattern: defaultShuffle,
-      player: [{ id: playerID, pattern: shuffledPattern, nickname: gameDetails.nickname, played:["","","","","",""] }],
+      player: [{ id: playerID, pattern: shuffledPattern, nickname: gameDetails.nickname, played: ["", "", "", "", "", ""] }],
       isNew: true
     }
     try {
@@ -90,7 +91,7 @@ export default function HomePage() {
     const newGameData = {
       document: room,
       defaultPattern: [],
-      player: { id: playerID, pattern: shuffledPattern, nickname: gameDetails.nickname, played:["","","","","",""] },
+      player: { id: playerID, pattern: shuffledPattern, nickname: gameDetails.nickname, played: ["", "", "", "", "", ""] },
       isNew: false
     }
     try {
@@ -157,40 +158,43 @@ export default function HomePage() {
 
   return (
     <main className="flex min-h-screen flex-col gap-[20px] items-center justify-center p-2">
-      <form onSubmit={createNewGame} className={`${gameState == "new" ? "flex" : "hidden"} flex-col p-2 border border-[green] w-[400px] items-start box-border`}>
-        <h2 className="self-center">Welcome to Colour Matcher</h2>
-        <label className="border w-full" htmlFor="username">Nickname</label>
-        <input value={gameDetails.nickname} onChange={(e) => { handleInputChange(e) }} type="text" placeholder='Enter your nickname' className="w-full border mt-[5px]" name="nickname" />
-        <label className="border mt-[20px] w-full" htmlFor="password">How many players?</label>
-        <select value={gameDetails.players} onChange={handleInputChange} name='players' className='border'>
-          <option value="2">2</option>
-          <option value="3">3</option>
-          <option value="4">4</option>
-        </select>
+      <Suspense fallback={<p>Loading feed...</p>}>
+        <form onSubmit={createNewGame} className={`${gameState == "new" ? "flex" : "hidden"} flex-col p-2 border border-[green] w-[400px] items-start box-border`}>
+          <h2 className="self-center">Welcome to Colour Matcher</h2>
+          <label className="border w-full" htmlFor="username">Nickname</label>
+          <input value={gameDetails.nickname} onChange={(e) => { handleInputChange(e) }} type="text" placeholder='Enter your nickname' className="w-full border mt-[5px]" name="nickname" />
+          <label className="border mt-[20px] w-full" htmlFor="password">How many players?</label>
+          <select value={gameDetails.players} onChange={handleInputChange} name='players' className='border'>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+          </select>
 
-        <div className="mt-[20px] borde flex flex-col w-full">
-          <div className="w-full flex justify-between">
-            <button disabled={gameDetails.nickname == "" || isCreated} type='submit' className="px-2 border rounded">Create Game</button>
-            <button type='submit' className={`px-2 border rounded ${isCreated ? "" : "hidden"}`}>Join Game</button>
+          <div className="mt-[20px] borde flex flex-col w-full">
+            <div className="w-full flex justify-between">
+              <button disabled={gameDetails.nickname == "" || isCreated} type='submit' className="px-2 border rounded">Create Game</button>
+              <button type='submit' className={`px-2 border rounded ${isCreated ? "" : "hidden"}`}>Join Game</button>
+            </div>
           </div>
+        </form>
+        <div className={`${gameState == "new" ? "flex" : "hidden"} justify-between w-[400px] border mt-[10px]`}>
+          <input value={shareLink} readOnly className='border outline-none px-[2px] w-[85%]' />
+          <button onClick={() => { copyToClipboard(shareLink) }} className='border box-border  p-[2px]'> copy </button>
         </div>
-      </form>
-      <div className={`${gameState == "new" ? "flex" : "hidden"} justify-between w-[400px] border mt-[10px]`}>
-        <input value={shareLink} readOnly className='border outline-none px-[2px] w-[85%]' />
-        <button onClick={() => { copyToClipboard(shareLink) }} className='border box-border  p-[2px]'> copy </button>
-      </div>
-      <form onSubmit={joinNewGame} className={`${gameState == "join" ? "flex" : "hidden"} flex-col p-2 border border-[green] w-[400px] items-start box-border`}>
-        <h2 className="self-center">Welcome to Colour Matcher</h2>
-        <label className="border w-full" htmlFor="username">Nickname</label>
-        <input value={gameDetails.nickname} onChange={(e) => { handleInputChange(e) }} type="text" placeholder='Enter your nickname' className="w-full border mt-[5px]" name="nickname" />
+        <form onSubmit={joinNewGame} className={`${gameState == "join" ? "flex" : "hidden"} flex-col p-2 border border-[green] w-[400px] items-start box-border`}>
+          <h2 className="self-center">Welcome to Colour Matcher</h2>
+          <label className="border w-full" htmlFor="username">Nickname</label>
+          <input value={gameDetails.nickname} onChange={(e) => { handleInputChange(e) }} type="text" placeholder='Enter your nickname' className="w-full border mt-[5px]" name="nickname" />
 
-        <div className="mt-[20px] borde flex flex-col w-full">
-          <div className="w-full flex justify-between">
-            <button disabled={gameDetails.nickname == ""} type='submit' className="px-2 border rounded">Join Game</button>
+          <div className="mt-[20px] borde flex flex-col w-full">
+            <div className="w-full flex justify-between">
+              <button disabled={gameDetails.nickname == ""} type='submit' className="px-2 border rounded">Join Game</button>
+            </div>
           </div>
-        </div>
-      </form>
-      {/* <button onClick={()=>{testSocketConnection()}}>test</button> */}
+        </form>
+        {/* <button onClick={()=>{testSocketConnection()}}>test</button> */}
+
+      </Suspense>
 
     </main>
   )

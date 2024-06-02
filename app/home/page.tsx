@@ -13,6 +13,7 @@ import useSWRSubscription from 'swr/subscription'
 import { useSubscription } from "@/hooks/customHooks";
 import { collection, addDoc, getDocs, limit, query, where, doc, updateDoc, setDoc, getDoc, startAt, startAfter, getCountFromServer, serverTimestamp, endBefore, onSnapshot } from "firebase/firestore";
 import { isIdentical } from "@/components/helpers";
+import { Suspense } from "react";
 
 
 export default function PlayerHome() {
@@ -47,7 +48,7 @@ export default function PlayerHome() {
       localStorage.removeItem("colourMatcherPlayerData")
       router.push("/")
       return
-    }    
+    }
     localStorage.removeItem("colourMatcherPlayerData")
     router.push("/")
     return
@@ -79,9 +80,9 @@ export default function PlayerHome() {
     if (gameDoc.exists()) {
       const thePlayers = gameDoc.data().players
       const currentTurn = Number(gameDoc.data().turn)
-      const newTurn = currentTurn < thePlayers.length-1 ? currentTurn + 1 : 0
+      const newTurn = currentTurn < thePlayers.length - 1 ? currentTurn + 1 : 0
       const thisPlayer = gameDoc.data().players.find((player: any) => player.id == localData.playerId)
-      const thisPlayerIndex = gameDoc.data().players.findIndex((player: any) => player.id == localData.playerId)      
+      const thisPlayerIndex = gameDoc.data().players.findIndex((player: any) => player.id == localData.playerId)
       thisPlayer.played = currentPattern
       const newPlayers = thePlayers.map((player: any) => {
         if (player.id == localData.playerId) {
@@ -112,16 +113,19 @@ export default function PlayerHome() {
 
   return (
     <main className="flex min-h-screen flex-col gap-[20px] items-center justify-center p-2">
-      <h2 className={`p-2 border rounded-[10px] font-[700] flex justify-center items-center text-center h-[60px] w-[250px]`}>
-        {`${isWon ? "You have won this round": turn ? "Your turn" : ""}`}
-      </h2>
-      <h2>Colour Match</h2>
-      <div className="flex flex-col w-[100%] md:flex-row md:justify-around gap-[20px]">
-        <ColourMatcher type="play" pattern={currentPattern} toChange={toChange} switchColour={switchColour} />
-        <ColourMatcher type="default" pattern={pattern} toChange={toChange} switchColour={switchColour} />
-      </div>
+      <Suspense fallback={<p>Loading feed...</p>}>
+        <h2 className={`p-2 border rounded-[10px] font-[700] flex justify-center items-center text-center h-[60px] w-[250px]`}>
+          {`${isWon ? "You have won this round" : turn ? "Your turn" : ""}`}
+        </h2>
+        <h2>Colour Match</h2>
+        <div className="flex flex-col w-[100%] md:flex-row md:justify-around gap-[20px]">
+          <ColourMatcher type="play" pattern={currentPattern} toChange={toChange} switchColour={switchColour} />
+          <ColourMatcher type="default" pattern={pattern} toChange={toChange} switchColour={switchColour} />
+        </div>
 
-      <button onClick={() => { play() }} className="border p-2 rounded mt-[20px]">Play Pattern</button>
+        <button onClick={() => { play() }} className="border p-2 rounded mt-[20px]">Play Pattern</button>
+
+      </Suspense>
     </main>
   )
   // return (
