@@ -33,9 +33,10 @@ function useSubscription(playerInfo: {nickname: string, playerId: string, roomId
                     let thisPlayerTurn = docSnapshot.data().players.findIndex((player:any) => player.id == playerData.playerId)
                     const currentTurn = docSnapshot.data().turn
                     const isTurn = thisPlayerTurn.toString() == currentTurn
-                    console.log("this player turn: ", thisPlayerTurn, currentTurn, isTurn)
+                    console.log("this player turn: ", docSnapshot.data().players[Number(currentTurn)].nickname)
+                    const nextPlayer = docSnapshot.data().players[Number(currentTurn)].nickname
                     const isWon = isIdentical(thisPlayer.played, docSnapshot.data().default)
-                    thisPlayer = {...thisPlayer, isWon:isWon, isTurn: isTurn}
+                    thisPlayer = {...thisPlayer, isWon:isWon, isTurn: isTurn, isPlaying:`${nextPlayer} is playing`}
                     next(thisPlayer);
                 } else {
                     next([]);
