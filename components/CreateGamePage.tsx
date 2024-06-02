@@ -68,7 +68,7 @@ export default function CreateGamePage() {
                 console.error('Unexpected error:', error);
             }
         }
-        setShareLink(`${process.env.api}:3000?id=${roomId}`)
+        setShareLink(`https://colour-matcher-game.vercel.app/?id=${roomId}`)
         localStorage.setItem("colourMatcherPlayerData", JSON.stringify({ roomId: roomId, playerId: playerID, url: `${process.env.apiToo}:3000?id=${roomId}`, nickname: gameDetails.nickname }))
         setIsCreated(true)
         // router.push(`/home?id=${roomId}&nickname=${gameDetails.nickname}`)
