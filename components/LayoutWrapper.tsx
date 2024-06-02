@@ -9,11 +9,10 @@ const LayoutWrapper: React.FC<LayoutWrapperProps> = ({ children }) => {
    
     return (
         <div className={`flex flex-col`}>
-            <Suspense fallback={<p>Loading feed...</p>}>
+            
             <div>
                 {children}
             </div>
-            </Suspense>
         </div>
     )
 };
