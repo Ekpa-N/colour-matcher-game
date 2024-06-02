@@ -9,7 +9,7 @@ import { v4 as uuidv4 } from "uuid"
 import { db } from '@/firebase';
 import { Suspense } from 'react'
 import { collection, addDoc, getDocs, limit, query, where, doc, updateDoc, setDoc, getDoc, startAt, startAfter, getCountFromServer, serverTimestamp, endBefore } from "firebase/firestore";
-import CreateGamePage from '@/components/createGamePage';
+import CreateGamePage from '@/components/CreateNewGame';
 
 
 export default function HomePage() {
