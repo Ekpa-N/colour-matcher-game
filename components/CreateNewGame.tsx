@@ -87,7 +87,7 @@ export default function CreateGamePage() {
             isNew: false
         }
         try {
-            const newGame = await axios.post(`${process.env.api}:3002/new-game`, newGameData);
+            const newGame = await axios.post(`https://colour-matcher-server.vercel.app/new-game`, newGameData);
             if (newGame.data.status === 200) {
                 localStorage.setItem("colourMatcherPlayerData", JSON.stringify({ roomId: room, playerId: playerID, url: `${process.env.apiToo}:3000?id=${room}`, nickname: gameDetails.nickname }))
                 router.push(`/home`)
