@@ -109,7 +109,7 @@ export default function PlayerHome() {
   }
 
   async function reset() {
-    if (isWon || !hasWon) {
+    if (!isWon && !hasWon) {
       console.log("reset clicked")
       return
     }
