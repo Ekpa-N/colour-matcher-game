@@ -68,8 +68,8 @@ export default function CreateGamePage() {
                 console.error('Unexpected error:', error);
             }
         }
-        setShareLink(`https://colour-matcher-game.vercel.app/?id=${roomId}`)
-        localStorage.setItem("colourMatcherPlayerData", JSON.stringify({ roomId: roomId, playerId: playerID, url: `${process.env.apiToo}:3000?id=${roomId}`, nickname: gameDetails.nickname }))
+        setShareLink(`https://colour-matcher-game.vercel.app?id=${roomId}`)
+        localStorage.setItem("colourMatcherPlayerData", JSON.stringify({ roomId: roomId, playerId: playerID, url: `https://colour-matcher-game.vercel.app/?id=${roomId}`, nickname: gameDetails.nickname }))
         setIsCreated(true)
         // router.push(`/home?id=${roomId}&nickname=${gameDetails.nickname}`)
     }
@@ -89,7 +89,7 @@ export default function CreateGamePage() {
         try {
             const newGame = await axios.post(`https://colour-matcher-server.vercel.app/new-game`, newGameData);
             if (newGame.data.status === 200) {
-                localStorage.setItem("colourMatcherPlayerData", JSON.stringify({ roomId: room, playerId: playerID, url: `${process.env.apiToo}:3000?id=${room}`, nickname: gameDetails.nickname }))
+                localStorage.setItem("colourMatcherPlayerData", JSON.stringify({ roomId: room, playerId: playerID, url: `https://colour-matcher-game.vercel.app?id=${room}`, nickname: gameDetails.nickname }))
                 router.push(`/home`)
                 console.log(newGame.data.message);
             }

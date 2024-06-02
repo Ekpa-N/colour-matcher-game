@@ -20,6 +20,7 @@ export default function PlayerHome() {
   const [isWon, setIsWon] = useState<boolean>(false)
   const [turn, setTurn] = useState<any>()
   const [isPlaying, setIsPlaying] = useState<any>("")
+  const [hasWon, setHasWon] = useState<any>(false)
 
   async function checkExistingGameData({ roomId, playerId, nickname }: { roomId: string, playerId: string, nickname: string }) {
     let players: any[] = []
@@ -30,16 +31,16 @@ export default function PlayerHome() {
     if (docSnap.exists()) {
       players = docSnap.data().players
       const currentPlayer = players.find(player => player.id == playerId)
-      if (currentPlayer) {
-        const socket = io(`${process.env.api}:3002`, {
-          query: {
-            customId: playerId,
-            nickname: nickname,
-            roomId: roomId
-          }
-        })
-        return
-      }
+      // if (currentPlayer) {
+      //   const socket = io(`${process.env.api}:3002`, {
+      //     query: {
+      //       customId: playerId,
+      //       nickname: nickname,
+      //       roomId: roomId
+      //     }
+      //   })
+      //   return
+      // }
       localStorage.removeItem("colourMatcherPlayerData")
       router.push("/")
       return
@@ -57,6 +58,7 @@ export default function PlayerHome() {
       setIsWon(error.isWon)
       setTurn(error.isTurn)
       setIsPlaying(error.isPlaying)
+      setHasWon(error.hasWon)
     }
   }, [error])
 
@@ -71,7 +73,7 @@ export default function PlayerHome() {
   }, [])
 
   async function play() {
-    if(!turn) {
+    if (!turn || isWon) {
       return
     }
     const dataRef = doc(db, "games", localData.roomId)
@@ -99,6 +101,27 @@ export default function PlayerHome() {
     }
   }
 
+  async function reset() {
+    if (isWon || !hasWon) {
+      console.log("reset clicked")
+      return
+    }
+    const dataRef = doc(db, "games", localData.roomId)
+    const gameDoc = await getDoc(dataRef)
+    if(gameDoc.exists()) {
+      const thePlayers = gameDoc.data().players
+      const playsReset = thePlayers.map((player:any)=>{
+        player.played = ["","","","","",""]
+        return player
+      })
+      await updateDoc(dataRef, {
+        players: playsReset,
+        turn: "0"
+      })
+      console.log("Reset")
+    }
+  }
+
   function switchColour(idx: number, type?: string): void {
     if (type == "play") {
       const theCurrentPattern = currentPattern
@@ -112,16 +135,17 @@ export default function PlayerHome() {
 
   return (
     <main className="flex min-h-screen flex-col gap-[20px] items-center justify-center p-2">
-        <h2 className={`p-2 border rounded-[10px] font-[700] flex justify-center items-center text-center h-[60px] w-[250px]`}>
-          {`${isWon ? "You have won this round" : turn ? "Your turn" : isPlaying}`}
-        </h2>
-        <h2>Colour Match</h2>
-        <div className="flex flex-col w-[100%] md:flex-row md:justify-around gap-[20px]">
-          <ColourMatcher type="play" pattern={currentPattern} toChange={toChange} switchColour={switchColour} />
-          <ColourMatcher type="default" pattern={pattern} toChange={toChange} switchColour={switchColour} />
-        </div>
+      <h2 className={`p-2 border rounded-[10px] font-[700] flex justify-center items-center text-center h-[60px] w-[250px]`}>
+        {`${isWon ? "You have won this round!" : hasWon ? hasWon : turn ? "Your turn" : isPlaying}`}
+      </h2>
+      <h2>Colour Match</h2>
+      <div className="flex flex-col w-[100%] md:flex-row md:justify-around gap-[20px]">
+        <ColourMatcher type="play" pattern={currentPattern} toChange={toChange} switchColour={switchColour} />
+        <ColourMatcher type="default" pattern={pattern} toChange={toChange} switchColour={switchColour} />
+      </div>
 
-        <button onClick={() => { play() }} className="border p-2 rounded mt-[20px]">Play Pattern</button>
+      <button onClick={() => { play() }} className="border p-2 rounded mt-[20px]">Play Pattern</button>
+      <button onClick={() => { reset() }} className={`border p-2 rounded mt-[20px] ${isWon ? "" : hasWon ? "" : "hidden"}`}>Reset</button>
     </main>
   )
 }
