@@ -20,7 +20,7 @@ export default function HomePage() {
 
   return (
     <main className="flex min-h-screen flex-col gap-[20px] items-center justify-center p-2">
-      <Suspense fallback={<p>Loading feed...</p>}>
+      <Suspense fallback={<p>Loading Game...</p>}>
         <CreateGamePage />
       </Suspense>
     </main>

@@ -26,15 +26,46 @@ export default function CreateGamePage() {
         setGameDetails({ ...gameDetails, [e.target.name]: e.target.value })
     }
 
-    // function testSocketConnection() {
-    //   const socket = io(`${process.env.api}:3002` || "", {
-    //     query: {
-    //       customId: "customID",
-    //       nickname: "nickname",
-    //       roomId: "roomID"
-    //     }
-    //   })
-    // }
+    useEffect(() => {
+        async function validateState() {
+            const game = searchParams.has("id")
+            const id = searchParams.get("id") as string
+            let existingDetails = localStorage.getItem("colourMatcherPlayerData") != null && localStorage.getItem("colourMatcherPlayerData") != undefined ? JSON.parse(localStorage.getItem("colourMatcherPlayerData") as string) : ""
+            if (existingDetails) {
+                await checkExistingGameData(existingDetails)
+                return
+            }
+            if (game) {
+                setRoom(id)
+                setGameState("join")
+                return
+            }
+            setGameState("new")
+        }
+
+        validateState()
+    }, [])
+
+    async function checkExistingGameData({ roomId, playerId }: { roomId: string, playerId: string }) {
+        let players: any[] = []
+        const docRef = doc(db, "games", roomId);
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+            players = docSnap.data().players
+            const currentPlayer = players.find(player => player.id == playerId)
+            if (currentPlayer) {
+                router.push(`/home`)
+                return
+            }
+            localStorage.removeItem("colourMatcherPlayerData")
+            setGameState("new")
+            // router.push(`/`)
+            return
+        }
+        localStorage.removeItem("colourMatcherPlayerData")
+        setGameState("new")
+        return
+    }
 
     async function createNewGame(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault()
@@ -106,44 +137,8 @@ export default function CreateGamePage() {
         }
     }
 
-    async function checkExistingGameData({ roomId, playerId }: { roomId: string, playerId: string }) {
-        let players: any[] = []
-        // const game = searchParams.has("id")
-        // const id = searchParams.get("id") as string
-        const docRef = doc(db, "games", roomId);
-        const docSnap = await getDoc(docRef);
-        if (docSnap.exists()) {
-            players = docSnap.data().players
-            const currentPlayer = players.find(player => player.id == playerId)
-            if (currentPlayer) {
-                router.push(`/home?player=${playerId}&room=${roomId}`)
-                return
-            }
-            localStorage.removeItem("colourMatcherPlayerData")
-            setGameState("new")
-            return
-        }
-        setGameState("new")
-        return
-    }
 
 
-    useEffect(() => {
-        const game = searchParams.has("id")
-        const id = searchParams.get("id") as string
-        // local Storage test data {"roomId":"VgX@4PVaaoEkpa", "playerId":"9e6f178a-b3ec-4fb5-9b7b-26bfcd1f7dcb"}
-        let existingDetails = localStorage.getItem("colourMatcherPlayerData") != null && localStorage.getItem("colourMatcherPlayerData") != undefined ? JSON.parse(localStorage.getItem("colourMatcherPlayerData") as string) : ""
-        if (existingDetails) {
-            checkExistingGameData(existingDetails)
-            return
-        }
-        if (game) {
-            setRoom(id)
-            setGameState("join")
-        } else {
-            setGameState("new")
-        }
-    }, [])
 
 
 
