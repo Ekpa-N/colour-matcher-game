@@ -6,6 +6,7 @@ import { generateRandomString, copyToClipboard, shuffleArray } from '@/component
 import { useRouter, useSearchParams } from 'next/navigation';
 import axios from 'axios';
 import { v4 as uuidv4 } from "uuid"
+import Image from 'next/image';
 import { db } from '@/firebase';
 import { collection, addDoc, getDocs, limit, query, where, doc, updateDoc, setDoc, getDoc, startAt, startAfter, getCountFromServer, serverTimestamp, endBefore } from "firebase/firestore";
 
@@ -20,6 +21,7 @@ export default function CreateGamePage() {
     const router = useRouter()
     const pattern = ["red", "green", "blue", "yellow"]
     const [isCreated, setIsCreated] = useState<boolean>(false)
+    const [loadError, setLoadError] = useState<boolean>(false)
 
 
     function handleInputChange(e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>): void {
@@ -69,6 +71,8 @@ export default function CreateGamePage() {
 
     async function createNewGame(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault()
+        setIsLoading(true)
+        setLoadError(false)
         if (isCreated) {
             router.push(`/home`)
             return
@@ -84,30 +88,37 @@ export default function CreateGamePage() {
             isNew: true
         }
         try {
-            const newGame = await axios.post(`https://colour-matcher-server.vercel.app/new-game`, newGameData);
-            if (newGame.data.status === 200) {
-                console.log(newGame.data.message);
+            const newGame = await axios.post(`${process.env.newGame}`, newGameData);
+            if (newGame.status == 200) {
+                setShareLink(`https://colour-matcher-game.vercel.app?id=${roomId}`)
+                localStorage.setItem("colourMatcherPlayerData", JSON.stringify({ roomId: roomId, playerId: playerID, url: `https://colour-matcher-game.vercel.app/?id=${roomId}`, nickname: gameDetails.nickname }))
+                setIsCreated(true)
+                setIsLoading(false)
             }
         } catch (error) {
             if (axios.isAxiosError(error)) {
+                setIsLoading(false)
+                setLoadError(true)
                 console.error('Error message:', error.message)
                 if (error.response) {
+                    setLoadError(true)
+                    setIsLoading(false)
                     console.error('Response data:', error.response.data)
                     console.error('Response status:', error.response.status)
                 }
             } else {
+                setLoadError(true)
                 console.error('Unexpected error:', error);
+                setIsLoading(false)
             }
         }
-        setShareLink(`https://colour-matcher-game.vercel.app?id=${roomId}`)
-        localStorage.setItem("colourMatcherPlayerData", JSON.stringify({ roomId: roomId, playerId: playerID, url: `https://colour-matcher-game.vercel.app/?id=${roomId}`, nickname: gameDetails.nickname }))
-        setIsCreated(true)
         // router.push(`/home?id=${roomId}&nickname=${gameDetails.nickname}`)
     }
 
 
     async function joinNewGame(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault()
+        setIsLoading(true)
         // const roomId = generateRandomString() + gameDetails.nickname
         const shuffledPattern = shuffleArray(pattern)
         const playerID = uuidv4()
@@ -118,21 +129,25 @@ export default function CreateGamePage() {
             isNew: false
         }
         try {
-            const newGame = await axios.post(`https://colour-matcher-server.vercel.app/new-game`, newGameData);
-            if (newGame.data.status === 200) {
+            const newGame = await axios.post(`${process.env.newGame}`, newGameData);
+            if (newGame.status === 200) {
+                setIsLoading(false)
                 localStorage.setItem("colourMatcherPlayerData", JSON.stringify({ roomId: room, playerId: playerID, url: `https://colour-matcher-game.vercel.app?id=${room}`, nickname: gameDetails.nickname }))
                 router.push(`/home`)
-                console.log(newGame.data.message);
+                // console.log(newGame.data.message);
             }
         } catch (error) {
             if (axios.isAxiosError(error)) {
                 console.error('Error message:', error.message)
+                setIsLoading(false)
                 if (error.response) {
                     console.error('Response data:', error.response.data)
                     console.error('Response status:', error.response.status)
+                    setIsLoading(false)
                 }
             } else {
                 console.error('Unexpected error:', error);
+                setIsLoading(false)
             }
         }
     }
@@ -158,8 +173,14 @@ export default function CreateGamePage() {
 
                 <div className="mt-[20px] borde flex flex-col w-full">
                     <div className="w-full flex justify-between">
-                        <button disabled={gameDetails.nickname == "" || isCreated} type='submit' className="px-2 border rounded">Create Game</button>
+                        <button disabled={gameDetails.nickname == "" || isCreated || isLoading} type='submit' className="px-2 border rounded relative h-[30px] w-[150px] flex justify-center items-center">
+                            <h2 className={`${isLoading ? "hidden":""}`}>Create Game</h2>
+                            <div className={`relative borde h-[25px] w-[30px] ${isLoading ? "":"hidden"}`}>
+                                <Image alt='' src={"/images/loading-state.svg"} fill={true} />
+                            </div>
+                        </button>
                         <button type='submit' className={`px-2 border rounded ${isCreated ? "" : "hidden"}`}>Join Game</button>
+                        <input value={"Error occured, try again"} readOnly className={`px-2 borde rounded text-[9px] font-[700] text-[red] ${loadError ? "" : "hidden"}`} />
                     </div>
                 </div>
             </form>
