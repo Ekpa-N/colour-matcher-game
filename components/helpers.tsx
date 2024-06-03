@@ -99,6 +99,16 @@ function isIdentical(arr1: string[], arr2:string[]) {
   // If all elements are identical, return true
   return true;
 }
+
+function matchChecker(arr1: string [], arr2: string[]): number {
+  let count = 0
+  arr1.forEach((colour: string, idx:number)=>{
+    if(colour == arr2[idx]) {
+      count = count + 1
+    }
+  })
+  return count
+}
   
 
-export { generateRandomString, copyToClipboard, shuffleArray, isIdentical }
+export { generateRandomString, copyToClipboard, shuffleArray, isIdentical, matchChecker }

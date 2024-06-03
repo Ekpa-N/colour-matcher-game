@@ -15,8 +15,7 @@ const ColourMatcher: React.FC<ColourProps> = ({ pattern = [], toChange, switchCo
     const [playerPattern, setPlayerPattern] = useState<any[]>([])
 
     return (
-        <div className="border border-blac w-[100%] flex p-2 flex-col">
-            <div className="flex justify-between">
+        <div className={`border border-blac w-[100%] flex justify-between p-2`}>
                 {pattern.map((colour: string, idx: number) => {
                     if (type == "win") {
                         return (
@@ -43,7 +42,6 @@ const ColourMatcher: React.FC<ColourProps> = ({ pattern = [], toChange, switchCo
                         </button> //style={{backgroundColor: colour}}
                     )
                 })}
-            </div>
         </div>
     )
 }
