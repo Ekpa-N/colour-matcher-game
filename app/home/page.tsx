@@ -149,7 +149,7 @@ export default function PlayerHome() {
         {`${isWon ? "You have won this round!" : hasWon ? hasWon : turn ? "Your turn" : isPlaying}`}
       </h2>
       <h2>Colour Match</h2>
-      <div className="flex flex-col w-[100%] md:flex-row md:justify-around gap-[20px]">
+      <div className="flex flex-col w-[100%] md:w-[400px] gap-[20px]">
         <ColourMatcher type="play" pattern={currentPattern} toChange={toChange} switchColour={switchColour} />
         <ColourMatcher type="default" pattern={pattern} toChange={toChange} switchColour={switchColour} />
       </div>

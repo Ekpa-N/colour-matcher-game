@@ -33,15 +33,17 @@ export default function CreateGamePage() {
             const game = searchParams.has("id")
             const id = searchParams.get("id") as string
             let existingDetails = localStorage.getItem("colourMatcherPlayerData") != null && localStorage.getItem("colourMatcherPlayerData") != undefined ? JSON.parse(localStorage.getItem("colourMatcherPlayerData") as string) : ""
-            if (existingDetails) {
-                await checkExistingGameData(existingDetails)
-                return
-            }
+
             if (game) {
                 setRoom(id)
                 setGameState("join")
                 return
             }
+            if (existingDetails) {
+                await checkExistingGameData(existingDetails)
+                return
+            }
+
             setGameState("new")
         }
 
@@ -159,23 +161,23 @@ export default function CreateGamePage() {
 
 
     return (
-        <main className="flex min-h-screen flex-col gap-[20px] items-center justify-center p-2">
-            <form onSubmit={createNewGame} className={`${gameState == "new" ? "flex" : "hidden"} flex-col p-2 border border-[green] w-[400px] items-start box-border`}>
+        <main className="flex h-[450px] borde flex-col gap-[20px] items-center justify-start p-2">
+            <form onSubmit={createNewGame} className={`${gameState == "new" ? "flex" : "hidden"} flex-col p-2 border rounded-[5px] border-[green]  w-[350px] items-start box-border`}>
                 <h2 className="self-center">Welcome to Colour Matcher</h2>
-                <label className="border w-full" htmlFor="username">Nickname</label>
-                <input value={gameDetails.nickname} onChange={(e) => { handleInputChange(e) }} type="text" placeholder='Enter your nickname' className="w-full border mt-[5px]" name="nickname" />
-                <label className="border mt-[20px] w-full" htmlFor="password">How many players?</label>
-                <select value={gameDetails.players} onChange={handleInputChange} name='players' className='border'>
+                <label className="borde mt-[5px] w-full rounded px-[2px]" htmlFor="username">Nickname</label>
+                <input value={gameDetails.nickname} onChange={(e) => { handleInputChange(e) }} type="text" placeholder='Enter your nickname' className="w-full border rounded px-[2px] mt-[5px]" name="nickname" />
+                {/* <label className="borde mt-[20px] w-full" htmlFor="password">How many players?</label>
+                <select value={gameDetails.players} onChange={handleInputChange} name='players' className='borde'>
                     <option value="2">2</option>
                     <option value="3">3</option>
                     <option value="4">4</option>
-                </select>
+                </select> */}
 
                 <div className="mt-[20px] borde flex flex-col w-full">
                     <div className="w-full flex justify-between">
                         <button disabled={gameDetails.nickname == "" || isCreated || isLoading} type='submit' className="px-2 border rounded relative h-[30px] w-[150px] flex justify-center items-center">
-                            <h2 className={`${isLoading ? "hidden":""}`}>Create Game</h2>
-                            <div className={`relative borde h-[25px] w-[30px] ${isLoading ? "":"hidden"}`}>
+                            <h2 className={`${isLoading ? "hidden" : ""}`}>Create Game</h2>
+                            <div className={`relative borde h-[25px] w-[30px] ${isLoading ? "" : "hidden"}`}>
                                 <Image alt='' src={"/images/loading-state.svg"} fill={true} />
                             </div>
                         </button>
@@ -184,8 +186,8 @@ export default function CreateGamePage() {
                     </div>
                 </div>
             </form>
-            <div className={`${gameState == "new" ? "flex" : "hidden"} justify-between w-[400px] border mt-[10px]`}>
-                <input value={shareLink} readOnly className='border outline-none px-[2px] w-[85%]' />
+            <div className={`${gameState == "new" ? "flex" : "hidden"} justify-between w-[350px] borde mt-[10px]`}>
+                <input value={shareLink} readOnly className='border text-[9px] text-center outline-none px-[2px] w-[85%]' />
                 <button onClick={() => { copyToClipboard(shareLink) }} className='border box-border  p-[2px]'> copy </button>
             </div>
             <form onSubmit={joinNewGame} className={`${gameState == "join" ? "flex" : "hidden"} flex-col p-2 border border-[green] w-[400px] items-start box-border`}>
