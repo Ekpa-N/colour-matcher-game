@@ -197,7 +197,12 @@ export default function CreateGamePage() {
 
                 <div className="mt-[20px] borde flex flex-col w-full">
                     <div className="w-full flex justify-between">
-                        <button disabled={gameDetails.nickname == ""} type='submit' className="px-2 border rounded">Join Game</button>
+                        <button disabled={gameDetails.nickname == ""} type='submit' className="px-2 border rounded">
+                            <h2 className={`${isLoading ? "hidden" : ""}`}>Join Game</h2>
+                            <div className={`relative borde h-[25px] w-[30px] ${isLoading ? "" : "hidden"}`}>
+                                <Image alt='' src={"/images/loading-state.svg"} fill={true} />
+                            </div>
+                        </button>
                     </div>
                 </div>
             </form>

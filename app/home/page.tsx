@@ -23,6 +23,7 @@ export default function PlayerHome() {
   const [turn, setTurn] = useState<any>()
   const [isPlaying, setIsPlaying] = useState<any>("")
   const [hasWon, setHasWon] = useState<any>(false)
+  const [winningPattern, setWinningPattern] = useState<boolean>(false)
 
   async function checkExistingGameData(existingDetails: any) {
     let players: any[] = []
@@ -144,7 +145,8 @@ export default function PlayerHome() {
   }
 
   return (
-    <main className="flex relative min-h-screen flex-col gap-[20px] items-center justify-center p-2">
+    <main className="flex relative flex-col gap-[20px] items-center justify-center p-2">
+      <div className=""></div>
       <h2 className={`p-2 border rounded-[10px] font-[700] flex justify-center items-center text-center h-[60px] w-[250px]`}>
         {`${isWon ? "You have won this round!" : hasWon ? hasWon : turn ? "Your turn" : isPlaying}`}
       </h2>
