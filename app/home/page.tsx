@@ -117,6 +117,7 @@ export default function PlayerHome() {
   }
 
   async function reset() {
+    setMatchCount(0)
     if (!isWon && !hasWon) {
       console.log("reset clicked")
       return
@@ -135,6 +136,7 @@ export default function PlayerHome() {
         turn: "0",
         default: newDefault
       })
+      
       console.log("Reset")
     }
   }
@@ -166,7 +168,7 @@ export default function PlayerHome() {
 
       <button onClick={() => { play() }} className="border p-2 rounded mt-[20px]">Play Selection</button>
       <button onClick={() => { reset() }} className={`border p-2 rounded mt-[20px] ${isWon ? "" : hasWon ? "" : "hidden"}`}>Reset</button>
-      <div className={`${matchCount > 0 ? "" : "hidden"}`}>You matched {matchCount}</div>
+      <div className={`${matchCount > 0 ? "" : ""}`}>You matched {matchCount}</div>
       {/* <div className={`borde text-center mt-[20px] fancy w-[250px] ${winningPattern ? "" : ""}`}>
         <ColourMatcher type="win" pattern={winningPattern} toChange={toChange} switchColour={switchColour} />
       </div> */}
