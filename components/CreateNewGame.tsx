@@ -90,7 +90,11 @@ export default function CreateGamePage() {
             isNew: true
         }
         try {
-            const newGame = await axios.post(`${process.env.newGame}`, newGameData);
+            const newGame = await axios.post(`${process.env.newGame}`, newGameData, {
+                headers: {
+                    "Content-Type": "application/json"
+                }
+            })
             if (newGame.status == 200) {
                 setShareLink(`https://colour-matcher-game.vercel.app?id=${roomId}`)
                 localStorage.setItem("colourMatcherPlayerData", JSON.stringify({ roomId: roomId, playerId: playerID, url: `https://colour-matcher-game.vercel.app/?id=${roomId}`, nickname: gameDetails.nickname }))
@@ -131,7 +135,11 @@ export default function CreateGamePage() {
             isNew: false
         }
         try {
-            const newGame = await axios.post(`${process.env.newGame}`, newGameData);
+            const newGame = await axios.post(`${process.env.newGame}`, newGameData, {
+                headers: {
+                    "Content-Type": "application/json"
+                }
+            });
             if (newGame.status === 200) {
                 setIsLoading(false)
                 localStorage.setItem("colourMatcherPlayerData", JSON.stringify({ roomId: room, playerId: playerID, url: `https://colour-matcher-game.vercel.app?id=${room}`, nickname: gameDetails.nickname }))
