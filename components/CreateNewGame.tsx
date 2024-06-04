@@ -34,10 +34,22 @@ export default function CreateGamePage() {
             const id = searchParams.get("id") as string
             let existingDetails = localStorage.getItem("colourMatcherPlayerData") != null && localStorage.getItem("colourMatcherPlayerData") != undefined ? JSON.parse(localStorage.getItem("colourMatcherPlayerData") as string) : ""
 
+            if ((game && existingDetails) && (id == existingDetails.roomId)) {
+                await checkExistingGameData(existingDetails)
+                return               
+            }
+            if ((game && existingDetails) && (id != existingDetails.roomId)) {
+                localStorage.removeItem("colourMatcherPlayerData")             
+            }
+
             if (game) {
-                setRoom(id)
-                setGameState("join")
-                return
+                const docRef = doc(db, "games", id)
+                const docSnap = await getDoc(docRef)
+                if (docSnap.exists()) {
+                    setRoom(id)
+                    setGameState("join")
+                    return
+                }
             }
             if (existingDetails) {
                 await checkExistingGameData(existingDetails)
@@ -63,9 +75,9 @@ export default function CreateGamePage() {
             }
             localStorage.removeItem("colourMatcherPlayerData")
             setGameState("new")
-            // router.push(`/`)
             return
         }
+
         localStorage.removeItem("colourMatcherPlayerData")
         setGameState("new")
         return
