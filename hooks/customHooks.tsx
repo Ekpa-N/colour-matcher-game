@@ -38,16 +38,19 @@ function useSubscription(playerInfo: { nickname: string, playerId: string, roomI
                         let thisPlayerTurn = docSnapshot.data().players.findIndex((player: any) => player.id == playerData.playerId)
                         const currentTurn = docSnapshot.data().turn
                         const isTurn = thisPlayerTurn.toString() == currentTurn
-                        // console.log("this player turn: ", docSnapshot.data().players[Number(currentTurn)].nickname)
                         const isWon = isIdentical(thisPlayer.played, docSnapshot.data().default)
                         const hasWon = docSnapshot.data().players.find((player: any) => isIdentical(player.played, docSnapshot.data().default) == true)
-                        // console.log("has won: ", hasWon ? `${hasWon.nickname} has won this round` : false)
                         const nextPlayer = docSnapshot.data().players[Number(currentTurn)].nickname
                         thisPlayer = { ...thisPlayer, isWon: isWon, isTurn: isTurn, isPlaying: `${nextPlayer} is playing`, hasWon: hasWon ? `${hasWon.nickname} has won this round!` : false, winningPattern: hasWon ? docSnapshot.data().default : false, ownership: thisPlayer.isOwner ? allPlayers : false }
                         next(thisPlayer);
                     }
+                } else if(playerData.roomId != "12345678" && !docSnapshot.exists()) {
+                    next("removed")
+                    // debugger
+                    // console.log("it got here")
                 } else {
                     next([]);
+
                 }
             });
 

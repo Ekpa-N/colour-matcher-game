@@ -196,20 +196,20 @@ export default function CreateGamePage() {
 
                 <div className="mt-[20px] borde flex flex-col w-full">
                     <div className="w-full flex justify-between">
-                        <button disabled={gameDetails.nickname == "" || isCreated || isLoading} type='submit' className="px-2 border rounded relative h-[30px] w-[150px] flex justify-center items-center">
+                        <button disabled={gameDetails.nickname == "" || isCreated || isLoading} type='submit' className={`px-2 border rounded relative h-[30px] w-[150px] flex justify-center text-[#FFFFF0] active:text-[lightgreen] active:bg-[#FFFFF0] items-center ${isLoading ? "bg-[#FFFFF0]":"bg-[lightgreen]"}`}>
                             <h2 className={`${isLoading ? "hidden" : ""}`}>Create Game</h2>
                             <div className={`relative borde h-[25px] w-[30px] ${isLoading ? "" : "hidden"}`}>
                                 <Image alt='' src={"/images/loading-state.svg"} fill={true} />
                             </div>
                         </button>
-                        <button type='submit' className={`px-2 border rounded ${isCreated ? "" : "hidden"}`}>Join Game</button>
+                        <button type='submit' className={`px-2 border box-border font-[500] active:bg-[white] active:text-[green] flex justify-center items-center text-[15px] bg-[green] text-white rounded ${isCreated ? "" : "hidden"}`}>Join Game</button>
                         <input value={"Error occured, try again"} readOnly className={`px-2 borde rounded text-[9px] font-[700] text-[red] ${loadError ? "" : "hidden"}`} />
                     </div>
                 </div>
             </form>
-            <div className={`${gameState == "new" ? "flex" : "hidden"} justify-between w-[350px] borde mt-[10px]`}>
-                <input value={shareLink} readOnly className='border text-[9px] text-center outline-none px-[2px] w-[85%]' />
-                <button onClick={() => { copyToClipboard(shareLink) }} className='border box-border  p-[2px]'> copy </button>
+            <div className={`${gameState == "new" ? "flex" : "hidden"} justify-between gap-[5px] w-[350px] borde mt-[10px]`}>
+                <input value={shareLink} readOnly className='border text-[9px] text-center outline-none px-[2px] grow' />
+                <button disabled={shareLink == ""} onClick={() => { copyToClipboard(shareLink) }} className='border box-border font-[500] active:bg-[white] active:text-[green] flex justify-center items-center text-[15px] w-[85px] h-[35px]  bg-[green] text-[white] rounded-[5px]'> Copy Link </button>
             </div>
             <form onSubmit={joinNewGame} className={`${gameState == "join" ? "flex" : "hidden"} flex-col p-2 border border-[green] w-[400px] items-start box-border`}>
                 <h2 className="self-center">Welcome to Colour Matcher</h2>
@@ -227,7 +227,6 @@ export default function CreateGamePage() {
                     </div>
                 </div>
             </form>
-            {/* <button onClick={()=>{testSocketConnection()}}>test</button> */}
 
 
         </main>

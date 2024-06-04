@@ -90,3 +90,17 @@ input {
       transform: translate(-50%, -50%) scale(1.4) rotate(1turn);
   }
 }
+
+
+.delete {
+  background: #338f1f;
+  color:#f6ebf4
+}
+
+.play-button {
+  /* border: 2px solid purple; */
+}
+
+.play-button:active {
+  background-color: #fffff0;
+}

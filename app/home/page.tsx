@@ -8,7 +8,7 @@ import { useRouter } from "next/navigation";
 import { db } from '@/firebase';
 import { useSubscription } from "@/hooks/customHooks";
 import { shuffleArray, matchChecker, copyToClipboard } from "@/components/helpers";
-import { collection, addDoc, getDocs, limit, query, where, doc, updateDoc, setDoc, getDoc, startAt, startAfter, getCountFromServer, serverTimestamp, endBefore, onSnapshot } from "firebase/firestore";
+import { collection, addDoc, getDocs, limit, query, where, doc, updateDoc, setDoc, getDoc, startAt, startAfter, getCountFromServer, serverTimestamp, endBefore, onSnapshot, deleteDoc } from "firebase/firestore";
 
 
 export default function PlayerHome() {
@@ -52,6 +52,11 @@ export default function PlayerHome() {
     setEvict(e.target.value)
   }
 
+  async function endGame() {
+    const dataRef = doc(db, "games", localData.roomId)
+    const gameDoc = await deleteDoc(dataRef)
+  }
+
   async function evictPlayer() {
     if (evict == "") {
       return
@@ -91,7 +96,7 @@ export default function PlayerHome() {
       const thePlayers = gameDoc.data().players
       const newPlayers = thePlayers.filter((player: any) => player.id !== localData.playerId)
       let currentTurn = gameDoc.data().turn
-      if (newPlayers.length < currentTurn) {
+      if (newPlayers.length <= Number(currentTurn)) {
         currentTurn = newPlayers.length - 1
         await updateDoc(dataRef, {
           players: newPlayers,
@@ -219,45 +224,47 @@ export default function PlayerHome() {
   }
 
   return (
-    <main className="flex relative flex-col gap-[20px] items-center justify-center p-2">
-      <h2>Colour Match</h2>
-      <div className={`borde ${isLoading ? "hidden" : ""} text-center mt-[20px] w-[250px] ${isWon || hasWon ? "fancy" : ""}  ${winningPattern ? "" : ""}`}>
+    <main className="flex relative flex-col gap-[10px] items-center justify-center p-2">
+      <h2 className={`font-[600]`}> Colour Match</h2>
+      <div className={`borde ${isLoading ? "hidden" : ""} text-center mt-[5px] w-[250px] ${isWon || hasWon ? "fancy" : ""}  ${winningPattern ? "" : ""}`}>
         <ColourMatcher type="win" pattern={winningPattern} toChange={toChange} switchColour={switchColour} />
       </div>
       <div className={`p-2 ${isLoading ? "hidden" : ""} border rounded-[10px] font-[700] flex justify-center items-center text-center fanc h-[60px] w-[250px]`}>
         {`${isWon ? "You have won this round!" : hasWon ? hasWon : turn ? "Your turn" : isPlaying}`}
       </div>
-      <div className={`flex ${isLoading ? "hidden" : ""} flex-col w-[100%] md:w-[400px] gap-[20px]`}>
+      <div className={` ${isLoading ? "hidden" : "border rounded-[10px] font-[700] flex justify-center items-center text-center fanc h-[60px] w-[250px]"}`}>You matched {matchCount}</div>
+      <div className={`flex ${isLoading ? "hidden" : ""} flex-col w-[350px]  gap-[20px]`}>
         <ColourMatcher type="play" pattern={currentPattern} toChange={toChange} switchColour={switchColour} />
         <ColourMatcher type="default" pattern={pattern} toChange={toChange} switchColour={switchColour} />
       </div>
 
-      <div className="flex w-[99%] borde min-h-[98px] items-end justify-between p-[2px]">
+      <div className="flex w-[350px] borde min-h-[98px] items-end justify-between p-[2px]">
         <div className={`flex justify-between borde h-full flex-col ${allPlayers ? "" : "hidden"}`}>
           {/* <h2 className="borde w-full">Kickout Players</h2> */}
           <div className="flex flex-col min-h-[80px] borde gap-[5px]">
-            <button onClick={() => { evictPlayer() }} className="p-2 rounded border rounded-[10px]">Kickout Player</button>
+            <h2 className="text-[green]">Players List</h2>
             <select onChange={(e) => { handleSelectEvict(e) }} name='kickout' className='border w-[125px] rounded-[10px] h-[35px] outline-none'>
               {allPlayers && allPlayers.map((player: any, idx: number) => {
                 return <option key={idx} className="border p-2" value={player.id}>{player.nickName}</option>
               })}
             </select>
+            <button onClick={() => { evictPlayer() }} className="p-2 rounded border rounded-[10px] text-[#fffff0] active:text-[#fffff0] active:bg-[red] bg-[#1f606d]">Kickout Player</button>
           </div>
         </div>
-        <button onClick={() => { exitGame() }} className={`border ${isLoading || allPlayers ? "hidden" : ""} p-2 rounded`}>Leave Game</button>
-        <button onClick={() => { play() }} className={`border ${isLoading ? "hidden" : ""} p-2 rounded`}>Play Selection</button>
+        <button onClick={() => { exitGame() }} className={`border ${isLoading || allPlayers ? "hidden" : ""} p-2 rounded text-[#fffff0] active:text-[#fffff0] active:bg-[red] bg-[#1f606d]`}>Leave Game</button>
+        <button onClick={() => { play() }} className={`border ${isLoading ? "hidden" : ""} text-[#f6ebf4] active:bg-[#f6ebf4] active:text-[#338f1f] bg-[#338f1f] p-2 font-[600] rounded`}>Play Selection</button>
       </div>
       <button onClick={() => { reset() }} className={`border p-2 rounded mt-[20px] ${isWon ? "" : hasWon ? "" : "hidden"}`}>Reset</button>
-      <div className={`${matchCount > 0 ? "" : ""} ${isLoading ? "hidden" : ""}`}>You matched {matchCount}</div>
-      <div className={`${allPlayers ? "flex" : "hidden"} justify-between w-[350px] borde mt-[10px]`}>
-        <input value={localData.url} readOnly className='border text-[9px] text-center outline-none px-[2px] w-[85%]' />
-        <button onClick={() => { copyToClipboard(localData.url) }} className='border box-border  p-[2px]'> copy </button>
+      <div className={`${allPlayers ? "flex" : "hidden"} justify-between w-[350px] gap-[5px] borde mt-[10px]`}>
+        <input value={localData.url} readOnly className='border text-[9px] text-center outline-none px-[2px] grow' />
+        <button onClick={() => { copyToClipboard(localData.url) }} className='border box-border font-[500] active:bg-[white] active:text-[green] flex justify-center items-center text-[15px] w-[85px] h-[35px]  bg-[green] text-[white] rounded-[5px]'> Copy Link </button>
       </div>
       <div className={`absolute border text-black w-full ${isLoading ? "" : "hidden"} flex items-center justify-center h-full`}>
         <div className={`relative borde h-[50px] w-[50px] mt-[250px]`}>
           <Image alt='' src={"/images/loading-state.svg"} fill={true} />
         </div>
       </div>
+      <button onClick={() => { endGame() }} className={`border ${isLoading ? "hidden" : "text-[#fffff0] active:text-[red] active:bg-[#fffff0] bg-[red]"} p-2 rounded`}>End Game</button>
     </main>
   )
 }
