@@ -224,16 +224,16 @@ export default function PlayerHome() {
         <ColourMatcher type="default" pattern={pattern} toChange={toChange} switchColour={switchColour} />
       </div>
 
-      <div className="flex w-[99%] borde h-[78px] items-end justify-between p-[2px]">
+      <div className="flex w-[99%] borde min-h-[98px] items-end justify-between p-[2px]">
         <div className={`flex justify-between borde h-full flex-col ${allPlayers ? "" : "hidden"}`}>
-          <h2 className="borde w-full">Kickout Players</h2>
-          <div className="flex borde gap-[20px]">
-            <select onChange={(e) => { handleSelectEvict(e) }} name='kickout' className='border w-[105px] outline-none'>
+          {/* <h2 className="borde w-full">Kickout Players</h2> */}
+          <div className="flex flex-col min-h-[80px] borde gap-[5px]">
+            <button onClick={() => { evictPlayer() }} className="p-2 rounded border rounded-[10px]">Kickout Player</button>
+            <select onChange={(e) => { handleSelectEvict(e) }} name='kickout' className='border w-[125px] rounded-[10px] h-[35px] outline-none'>
               {allPlayers && allPlayers.map((player: any, idx: number) => {
                 return <option key={idx} className="border p-2" value={player.id}>{player.nickName}</option>
               })}
             </select>
-            <button onClick={() => { evictPlayer() }} className="p-2 rounded border rounded-[10px]">kickout</button>
           </div>
         </div>
         <button onClick={() => { exitGame() }} className={`border ${isLoading || allPlayers ? "hidden" : ""} p-2 rounded`}>Leave Game</button>
