@@ -60,10 +60,21 @@ export default function PlayerHome() {
     const gameDoc = await getDoc(dataRef)
     if (gameDoc.exists()) {
       const thePlayers = gameDoc.data().players
-      const newPlayers = thePlayers.filter((player: any) => player.id !== evict)
-      await updateDoc(dataRef, {
-        players: newPlayers
-      })
+      let newPlayers = thePlayers.filter((player: any) => player.id !== evict)
+      let currentTurn = gameDoc.data().turn
+      // debugger
+      if (newPlayers.length <= Number(currentTurn)) {
+        currentTurn = newPlayers.length - 1
+        // debugger
+        await updateDoc(dataRef, {
+          turn: currentTurn.toString(),
+          players: newPlayers
+        })
+      } else {
+        await updateDoc(dataRef, {
+          players: newPlayers
+        })
+      }
     } else {
       console.log("No such document!");
     }
@@ -75,12 +86,21 @@ export default function PlayerHome() {
     if (gameDoc.exists()) {
       const thePlayers = gameDoc.data().players
       const newPlayers = thePlayers.filter((player: any) => player.id !== localData.playerId)
-      await updateDoc(dataRef, {
-        players: newPlayers
-      })
+      let currentTurn = gameDoc.data().turn
+      if (newPlayers.length < currentTurn) {
+        currentTurn = newPlayers.length - 1
+        await updateDoc(dataRef, {
+          players: newPlayers,
+          turn: currentTurn.toString()
+        })
+      } else {
+        await updateDoc(dataRef, {
+          players: newPlayers
+        })
+      }
     } else {
       console.log("No such document!");
-    }    
+    }
   }
 
   const { data, error } = useSubscription(localData)
@@ -103,8 +123,8 @@ export default function PlayerHome() {
       setTurn(error.isTurn)
       setIsPlaying(error.isPlaying)
       setHasWon(error.hasWon)
-      if(error.ownership) {
-        let allPlayersList = [{nickName:"", id:""}]
+      if (error.ownership) {
+        let allPlayersList = [{ nickName: "", id: "" }]
         setAllPlayers([...allPlayersList, error.ownership.filter((player: any) => player.id != localData.playerId)].flat())
       }
       if (error.winningPattern) {
@@ -204,15 +224,15 @@ export default function PlayerHome() {
       </div>
 
       <div className="flex w-[99%] borde h-[78px] items-end justify-between p-[2px]">
-        <div className={`flex justify-between borde h-full flex-col ${allPlayers ? "": "hidden"}`}>
+        <div className={`flex justify-between borde h-full flex-col ${allPlayers ? "" : "hidden"}`}>
           <h2 className="borde w-full">Kickout Players</h2>
           <div className="flex borde gap-[20px]">
-            <select onChange={(e)=>{handleSelectEvict(e)}} name='kickout' className='border w-[105px] outline-none'>
+            <select onChange={(e) => { handleSelectEvict(e) }} name='kickout' className='border w-[105px] outline-none'>
               {allPlayers && allPlayers.map((player: any, idx: number) => {
                 return <option key={idx} className="border p-2" value={player.id}>{player.nickName}</option>
               })}
             </select>
-            <button onClick={()=>{evictPlayer()}} className="p-2 rounded border rounded-[10px]">kickout</button>
+            <button onClick={() => { evictPlayer() }} className="p-2 rounded border rounded-[10px]">kickout</button>
           </div>
         </div>
         <button onClick={() => { exitGame() }} className={`border ${isLoading || allPlayers ? "hidden" : ""} p-2 rounded`}>Leave Game</button>
