@@ -70,10 +70,14 @@ export default function PlayerHome() {
           turn: currentTurn.toString(),
           players: newPlayers
         })
+        // localStorage.removeItem("colourMatcherPlayerData")
+        // router.push("/")
       } else {
         await updateDoc(dataRef, {
           players: newPlayers
         })
+        // localStorage.removeItem("colourMatcherPlayerData")
+        // router.push("/")
       }
     } else {
       console.log("No such document!");
@@ -117,6 +121,10 @@ export default function PlayerHome() {
   }, [])
 
   useEffect(() => {
+    if (error == "removed") {
+      localStorage.removeItem("colourMatcherPlayerData")
+      router.push("/")
+    }
     if (error && error.hasOwnProperty("played")) {
       // setCurrentPattern(error.played)
       setIsWon(error.isWon)
@@ -241,7 +249,7 @@ export default function PlayerHome() {
       </div>
       <button onClick={() => { reset() }} className={`border p-2 rounded mt-[20px] ${isWon ? "" : hasWon ? "" : "hidden"}`}>Reset</button>
       <div className={`${matchCount > 0 ? "" : ""} ${isLoading ? "hidden" : ""}`}>You matched {matchCount}</div>
-      <div className={`${allPlayers  ? "flex" : "hidden"} justify-between w-[350px] borde mt-[10px]`}>
+      <div className={`${allPlayers ? "flex" : "hidden"} justify-between w-[350px] borde mt-[10px]`}>
         <input value={localData.url} readOnly className='border text-[9px] text-center outline-none px-[2px] w-[85%]' />
         <button onClick={() => { copyToClipboard(localData.url) }} className='border box-border  p-[2px]'> copy </button>
       </div>
