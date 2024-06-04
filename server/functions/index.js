@@ -30,10 +30,12 @@ exports.createGame = onRequest({ maxInstances: 10, cors: true, invoker: "public"
     let gameCreated
     const docRef = db.collection('games').doc(document)
     if(isNew) {
-        gameCreated = await docRef.set({ default: defaultPattern, players: player, turn: "0" })
+        let thisPlayer = {...player[0], isOwner: true}
+        gameCreated = await docRef.set({ default: defaultPattern, players: [thisPlayer], turn: "0" })
     }
     if(!isNew) {
-        gameCreated = await docRef.update({ players: FieldValue.arrayUnion(player)})
+        let thisPlayer = {...player, isOwner: false}
+        gameCreated = await docRef.update({ players: FieldValue.arrayUnion(thisPlayer)})
     }
     response.send(gameCreated)
 })

@@ -28,17 +28,19 @@ function useSubscription(playerInfo: {nickname: string, playerId: string, roomId
             const docRef = doc(db, ...key);
             const unsubscribe = onSnapshot(docRef, (docSnapshot) => {
                 if (docSnapshot.exists()) {
-                    console.log("data found")
                     let thisPlayer = docSnapshot.data().players.find((player:any) => player.id == playerData.playerId)
+                    const allPlayers = docSnapshot.data().players.map((player:any)=>{
+                        return {nickName: player.nickname, id: player.id}
+                    })
                     let thisPlayerTurn = docSnapshot.data().players.findIndex((player:any) => player.id == playerData.playerId)
                     const currentTurn = docSnapshot.data().turn
                     const isTurn = thisPlayerTurn.toString() == currentTurn
-                    console.log("this player turn: ", docSnapshot.data().players[Number(currentTurn)].nickname)
+                    // console.log("this player turn: ", docSnapshot.data().players[Number(currentTurn)].nickname)
                     const isWon = isIdentical(thisPlayer.played, docSnapshot.data().default)
                     const hasWon = docSnapshot.data().players.find((player:any) => isIdentical(player.played, docSnapshot.data().default) == true)
-                    console.log("has won: ", hasWon ? `${hasWon.nickname} has won this round` : false)
+                    // console.log("has won: ", hasWon ? `${hasWon.nickname} has won this round` : false)
                     const nextPlayer = docSnapshot.data().players[Number(currentTurn)].nickname
-                    thisPlayer = {...thisPlayer, isWon:isWon, isTurn: isTurn, isPlaying:`${nextPlayer} is playing`, hasWon: hasWon ? `${hasWon.nickname} has won this round!` : false, winningPattern: hasWon ? docSnapshot.data().default: false}
+                    thisPlayer = {...thisPlayer, isWon:isWon, isTurn: isTurn, isPlaying:`${nextPlayer} is playing`, hasWon: hasWon ? `${hasWon.nickname} has won this round!` : false, winningPattern: hasWon ? docSnapshot.data().default: false, ownership: thisPlayer.isOwner ? allPlayers : false}
                     next(thisPlayer);
                 } else {
                     next([]);

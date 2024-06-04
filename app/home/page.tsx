@@ -25,6 +25,8 @@ export default function PlayerHome() {
   const [hasWon, setHasWon] = useState<any>(false)
   const [winningPattern, setWinningPattern] = useState<boolean | string[]>(["", "", "", ""])
   const [matchCount, setMatchCount] = useState<number>(0)
+  const [evict, setEvict] = useState<string>("")
+  const [allPlayers, setAllPlayers] = useState<any>(false)
 
   async function checkExistingGameData(existingDetails: any) {
     let players: any[] = []
@@ -46,6 +48,41 @@ export default function PlayerHome() {
     return
   }
 
+  function handleSelectEvict(e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) {
+    setEvict(e.target.value)
+  }
+
+  async function evictPlayer() {
+    if (evict == "") {
+      return
+    }
+    const dataRef = doc(db, "games", localData.roomId)
+    const gameDoc = await getDoc(dataRef)
+    if (gameDoc.exists()) {
+      const thePlayers = gameDoc.data().players
+      const newPlayers = thePlayers.filter((player: any) => player.id !== evict)
+      await updateDoc(dataRef, {
+        players: newPlayers
+      })
+    } else {
+      console.log("No such document!");
+    }
+  }
+
+  async function exitGame() {
+    const dataRef = doc(db, "games", localData.roomId)
+    const gameDoc = await getDoc(dataRef)
+    if (gameDoc.exists()) {
+      const thePlayers = gameDoc.data().players
+      const newPlayers = thePlayers.filter((player: any) => player.id !== localData.playerId)
+      await updateDoc(dataRef, {
+        players: newPlayers
+      })
+    } else {
+      console.log("No such document!");
+    }    
+  }
+
   const { data, error } = useSubscription(localData)
   useEffect(() => {
     async function validateState() {
@@ -54,10 +91,8 @@ export default function PlayerHome() {
         await checkExistingGameData(existingDetails)
         return
       }
-
       router.push("/")
     }
-
     validateState()
   }, [])
 
@@ -68,7 +103,10 @@ export default function PlayerHome() {
       setTurn(error.isTurn)
       setIsPlaying(error.isPlaying)
       setHasWon(error.hasWon)
-      // setWinningPattern(error.winningPattern)
+      if(error.ownership) {
+        let allPlayersList = [{nickName:"", id:""}]
+        setAllPlayers([...allPlayersList, error.ownership.filter((player: any) => player.id != localData.playerId)].flat())
+      }
       if (error.winningPattern) {
         setWinningPattern(error.winningPattern)
       } else {
@@ -136,7 +174,6 @@ export default function PlayerHome() {
         turn: "0",
         default: newDefault
       })
-      
       console.log("Reset")
     }
   }
@@ -155,24 +192,39 @@ export default function PlayerHome() {
   return (
     <main className="flex relative flex-col gap-[20px] items-center justify-center p-2">
       <h2>Colour Match</h2>
-      <div className={`borde text-center mt-[20px] w-[250px] ${ isWon ? "fancy" : ""}  ${winningPattern ? "" : ""}`}>
+      <div className={`borde ${isLoading ? "hidden" : ""} text-center mt-[20px] w-[250px] ${isWon ? "fancy" : ""}  ${winningPattern ? "" : ""}`}>
         <ColourMatcher type="win" pattern={winningPattern} toChange={toChange} switchColour={switchColour} />
       </div>
-      <div className={`p-2 border rounded-[10px] font-[700] flex justify-center items-center text-center fanc h-[60px] w-[250px]`}>
+      <div className={`p-2 ${isLoading ? "hidden" : ""} border rounded-[10px] font-[700] flex justify-center items-center text-center fanc h-[60px] w-[250px]`}>
         {`${isWon ? "You have won this round!" : hasWon ? hasWon : turn ? "Your turn" : isPlaying}`}
       </div>
-      <div className="flex flex-col w-[100%] md:w-[400px] gap-[20px]">
+      <div className={`flex ${isLoading ? "hidden" : ""} flex-col w-[100%] md:w-[400px] gap-[20px]`}>
         <ColourMatcher type="play" pattern={currentPattern} toChange={toChange} switchColour={switchColour} />
         <ColourMatcher type="default" pattern={pattern} toChange={toChange} switchColour={switchColour} />
       </div>
 
-      <button onClick={() => { play() }} className="border p-2 rounded mt-[20px]">Play Selection</button>
+      <div className="flex w-[99%] borde h-[78px] items-end justify-between p-[2px]">
+        <div className={`flex justify-between borde h-full flex-col ${allPlayers ? "": "hidden"}`}>
+          <h2 className="borde w-full">Kickout Players</h2>
+          <div className="flex borde gap-[20px]">
+            <select onChange={(e)=>{handleSelectEvict(e)}} name='kickout' className='border w-[105px] outline-none'>
+              {allPlayers && allPlayers.map((player: any, idx: number) => {
+                return <option key={idx} className="border p-2" value={player.id}>{player.nickName}</option>
+              })}
+            </select>
+            <button onClick={()=>{evictPlayer()}} className="p-2 rounded border rounded-[10px]">kickout</button>
+          </div>
+        </div>
+        <button onClick={() => { exitGame() }} className={`border ${isLoading || allPlayers ? "hidden" : ""} p-2 rounded`}>Leave Game</button>
+        <button onClick={() => { play() }} className={`border ${isLoading ? "hidden" : ""} p-2 rounded`}>Play Selection</button>
+      </div>
       <button onClick={() => { reset() }} className={`border p-2 rounded mt-[20px] ${isWon ? "" : hasWon ? "" : "hidden"}`}>Reset</button>
-      <div className={`${matchCount > 0 ? "" : ""}`}>You matched {matchCount}</div>
-      {/* <div className={`borde text-center mt-[20px] fancy w-[250px] ${winningPattern ? "" : ""}`}>
-        <ColourMatcher type="win" pattern={winningPattern} toChange={toChange} switchColour={switchColour} />
-      </div> */}
-      <div className={`absolute border text-black w-[95%] ${isLoading ? "" : "hidden"} opacity-[0.1] h-[90%]`}></div>
+      <div className={`${matchCount > 0 ? "" : ""} ${isLoading ? "hidden" : ""}`}>You matched {matchCount}</div>
+      <div className={`absolute border text-black w-full ${isLoading ? "" : "hidden"} flex items-center justify-center h-full`}>
+        <div className={`relative borde h-[50px] w-[50px] mt-[250px]`}>
+          <Image alt='' src={"/images/loading-state.svg"} fill={true} />
+        </div>
+      </div>
     </main>
   )
 }
