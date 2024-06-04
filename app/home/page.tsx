@@ -7,7 +7,7 @@ import { io } from 'socket.io-client';
 import { useRouter } from "next/navigation";
 import { db } from '@/firebase';
 import { useSubscription } from "@/hooks/customHooks";
-import { shuffleArray, matchChecker } from "@/components/helpers";
+import { shuffleArray, matchChecker, copyToClipboard } from "@/components/helpers";
 import { collection, addDoc, getDocs, limit, query, where, doc, updateDoc, setDoc, getDoc, startAt, startAfter, getCountFromServer, serverTimestamp, endBefore, onSnapshot } from "firebase/firestore";
 
 
@@ -241,6 +241,10 @@ export default function PlayerHome() {
       </div>
       <button onClick={() => { reset() }} className={`border p-2 rounded mt-[20px] ${isWon ? "" : hasWon ? "" : "hidden"}`}>Reset</button>
       <div className={`${matchCount > 0 ? "" : ""} ${isLoading ? "hidden" : ""}`}>You matched {matchCount}</div>
+      <div className={`${allPlayers  ? "flex" : "hidden"} justify-between w-[350px] borde mt-[10px]`}>
+        <input value={localData.url} readOnly className='border text-[9px] text-center outline-none px-[2px] w-[85%]' />
+        <button onClick={() => { copyToClipboard(localData.url) }} className='border box-border  p-[2px]'> copy </button>
+      </div>
       <div className={`absolute border text-black w-full ${isLoading ? "" : "hidden"} flex items-center justify-center h-full`}>
         <div className={`relative borde h-[50px] w-[50px] mt-[250px]`}>
           <Image alt='' src={"/images/loading-state.svg"} fill={true} />
