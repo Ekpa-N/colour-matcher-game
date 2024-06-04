@@ -33,7 +33,7 @@ export default function CreateGamePage() {
             const game = searchParams.has("id")
             const id = searchParams.get("id") as string
             let existingDetails = localStorage.getItem("colourMatcherPlayerData") != null && localStorage.getItem("colourMatcherPlayerData") != undefined ? JSON.parse(localStorage.getItem("colourMatcherPlayerData") as string) : ""
-            debugger
+            // debugger
 
             if ((game && existingDetails) && (id == existingDetails.roomId)) {
                 await checkExistingGameData(existingDetails)

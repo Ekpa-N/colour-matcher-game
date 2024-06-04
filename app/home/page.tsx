@@ -129,6 +129,7 @@ export default function PlayerHome() {
       }
       if (error.winningPattern) {
         setWinningPattern(error.winningPattern)
+        setMatchCount(0)
       } else {
         setWinningPattern(error.played)
       }
@@ -212,7 +213,7 @@ export default function PlayerHome() {
   return (
     <main className="flex relative flex-col gap-[20px] items-center justify-center p-2">
       <h2>Colour Match</h2>
-      <div className={`borde ${isLoading ? "hidden" : ""} text-center mt-[20px] w-[250px] ${isWon ? "fancy" : ""}  ${winningPattern ? "" : ""}`}>
+      <div className={`borde ${isLoading ? "hidden" : ""} text-center mt-[20px] w-[250px] ${isWon || hasWon ? "fancy" : ""}  ${winningPattern ? "" : ""}`}>
         <ColourMatcher type="win" pattern={winningPattern} toChange={toChange} switchColour={switchColour} />
       </div>
       <div className={`p-2 ${isLoading ? "hidden" : ""} border rounded-[10px] font-[700] flex justify-center items-center text-center fanc h-[60px] w-[250px]`}>
