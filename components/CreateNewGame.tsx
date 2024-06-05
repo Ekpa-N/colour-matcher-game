@@ -110,7 +110,7 @@ export default function CreateGamePage() {
             })
             if (newGame.status == 200) {
                 setShareLink(`https://colour-matcher-game.vercel.app?id=${roomId}`)
-                localStorage.setItem("colourMatcherPlayerData", JSON.stringify({ roomId: roomId, playerId: playerID, url: `https://colour-matcher-game.vercel.app/?id=${roomId}`, nickname: gameDetails.nickname }))
+                localStorage.setItem("colourMatcherPlayerData", JSON.stringify({ roomId: roomId, playerId: playerID, url: `https://colour-matcher-game.vercel.app?id=${roomId}`, nickname: gameDetails.nickname }))
                 setIsCreated(true)
                 setIsLoading(false)
             }
