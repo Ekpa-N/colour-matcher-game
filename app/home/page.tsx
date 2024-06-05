@@ -7,7 +7,7 @@ import { io } from 'socket.io-client';
 import { useRouter } from "next/navigation";
 import { db } from '@/firebase';
 import { useSubscription } from "@/hooks/customHooks";
-import { shuffleArray, matchChecker, copyToClipboard, isIdentical } from "@/components/helpers";
+import { shuffleArray, matchChecker, copyToClipboard, isIdentical, getInsult } from "@/components/helpers";
 import { collection, addDoc, getDocs, limit, query, where, doc, updateDoc, setDoc, getDoc, startAt, startAfter, getCountFromServer, serverTimestamp, endBefore, onSnapshot, deleteDoc } from "firebase/firestore";
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
@@ -66,6 +66,45 @@ const leaderBoardButton = {
   // boxShadow: "1",
 }
 
+const loserInsults = [
+  "Here's an idea that might help you in the next round: Try to play smarter!",
+  "I've seen kittens with better skills than you!",
+  "With skills like this? I hope there are no people who look up to you",
+  "Words of encouragement: everyone's better at this than you!",
+  "I don't want to encourage you, it'd just be false hope",
+  "No one's good at everything . . . but you're not at anything",
+  "It takes skill to be this bad",
+  "Are you allergic to winning?",
+  "I promise you, winning isn't luck",
+  "It's not your fault you lost. It's our fault for believing in you",
+  "No, seriously. Play for real in the next round.",
+  "Well, you tried. They can never take THAT away from you.",
+  "Better luck next time huh...sike! Who are we kidding with skills like yours?",
+  "I have no words",
+  "You're really getting better at this losing thing",
+  "The odds were never really in your favor",
+  "I really hope no one's watching you play",
+  "You really don't have it in you",
+  "Leave the game now and we'll forget this ever hapened",
+  "Surely you can't be comfortable living like this"
+]
+
+const winnerInsults = [
+  "Congratulations! Now it's time to find someone your own size",
+  "You didn't have to stunt this hard. You're hurting someone's child",
+  "I always believed in you!",
+  "Hail! The conquering hero",
+  "Guess who didn't get insulted this round? Not the losers!!!",
+  "You deserve good things. All winners do.",
+  "LOL! Your opponents thought! They really thought!",
+  "We should be friends. Text me, you champion, you.",
+  "You must wonder what losing feels like...sike! Who cares!",
+  "Kick ass, take names! Just not these losers' names.",
+  "You need new playmates. Winners can't be seen rolling with this crew",
+  "Can you hear that? No it's not rain, it's the tears you caused",
+  "I heard them say you got lucky...losers eh, always saying something"
+]
+
 
 export default function PlayerHome() {
   const [isLoading, setIsLoading] = useState<boolean>(true)
@@ -84,9 +123,9 @@ export default function PlayerHome() {
   const [evict, setEvict] = useState<string>("")
   const [allPlayers, setAllPlayers] = useState<any>(false)
   const [leaderboard, setLeaderboard] = useState<any[]>([])
-
   const [open, setOpen] = useState(false);
   const [instructions, setInstructions] = useState(false);
+  const [insult, setInsult] = useState<string>("")
 
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
@@ -209,6 +248,12 @@ export default function PlayerHome() {
       if (error.winningPattern) {
         setWinningPattern(error.winningPattern)
         setMatchCount(0)
+        if(error.isWon) {
+          setInsult(getInsult(winnerInsults))
+        }
+        if(!error.isWon && error.hasWon) {
+          setInsult(getInsult(loserInsults))
+        }
         handleOpen()
       } else {
         setWinningPattern(error.played)
@@ -385,6 +430,9 @@ export default function PlayerHome() {
               ))}
             </TableBody>
           </Table>
+          <Typography variant="h6" component="h2">
+            {insult}
+          </Typography>
           <Box>
             <Button sx={buttonStyle} disabled={isWon || hasWon ? false : !isWon || !hasWon ? true : false} onClick={() => { reset() }} className={`border border-[#000008]`}>Next Round</Button>
             <Button sx={buttonStyle} disabled={isWon || hasWon ? false : !isWon || !hasWon ? true : false} onClick={() => { reset("reset") }} className={`border border-[#000008] ml-[10px]`}>Reset Game</Button>
