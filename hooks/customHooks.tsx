@@ -35,13 +35,16 @@ function useSubscription(playerInfo: { nickname: string, playerId: string, roomI
                         const allPlayers = docSnapshot.data().players.map((player: any) => {
                             return { nickName: player.nickname, id: player.id }
                         })
+                        const leaderBoard = docSnapshot.data().players.map((player: any) => {
+                            return { nickName: player.nickname, rounds: player.roundsWon }
+                        })
                         let thisPlayerTurn = docSnapshot.data().players.findIndex((player: any) => player.id == playerData.playerId)
                         const currentTurn = docSnapshot.data().turn
                         const isTurn = thisPlayerTurn.toString() == currentTurn
                         const isWon = isIdentical(thisPlayer.played, docSnapshot.data().default)
                         const hasWon = docSnapshot.data().players.find((player: any) => isIdentical(player.played, docSnapshot.data().default) == true)
                         const nextPlayer = docSnapshot.data().players[Number(currentTurn)].nickname
-                        thisPlayer = { ...thisPlayer, isWon: isWon, isTurn: isTurn, isPlaying: `${nextPlayer} is playing`, hasWon: hasWon ? `${hasWon.nickname} has won this round!` : false, winningPattern: hasWon ? docSnapshot.data().default : false, ownership: thisPlayer.isOwner ? allPlayers : false }
+                        thisPlayer = { ...thisPlayer, isWon: isWon, isTurn: isTurn, isPlaying: `${nextPlayer} is playing`, hasWon: hasWon ? `${hasWon.nickname} has won this round!` : false, winningPattern: hasWon ? docSnapshot.data().default : false, ownership: thisPlayer.isOwner ? allPlayers : false, leaderBoard:leaderBoard }
                         next(thisPlayer);
                     }
                 } else if(playerData.roomId != "12345678" && !docSnapshot.exists()) {

@@ -7,8 +7,44 @@ import { io } from 'socket.io-client';
 import { useRouter } from "next/navigation";
 import { db } from '@/firebase';
 import { useSubscription } from "@/hooks/customHooks";
-import { shuffleArray, matchChecker, copyToClipboard } from "@/components/helpers";
+import { shuffleArray, matchChecker, copyToClipboard, isIdentical } from "@/components/helpers";
 import { collection, addDoc, getDocs, limit, query, where, doc, updateDoc, setDoc, getDoc, startAt, startAfter, getCountFromServer, serverTimestamp, endBefore, onSnapshot, deleteDoc } from "firebase/firestore";
+import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
+import Typography from '@mui/material/Typography';
+import Modal from '@mui/material/Modal';
+import { ClassNames } from "@emotion/react";
+import { Table, TableBody, TableCell, TableHead, TableRow } from "@mui/material";
+
+
+const style = {
+  position: 'absolute' as 'absolute',
+  top: '45%',
+  left: '50%',
+  transform: 'translate(-50%, -50%)',
+  width: 400,
+  bgcolor: '#fffff0',
+  boxShadow: 24,
+  p: 4,
+  display: "flex",
+  flexDirection: "column"
+};
+
+const buttonStyle = {
+  width: "140px",
+  marginTop: "10px",
+  border: "1px solid #fffff0",
+  color: "#000008"
+}
+
+const leaderBoardButton = {
+  minWidth: "80px",
+  selfAlign: "left",
+  color: "#000080",
+  backgroundColor: "#fffff0",
+  border: "1px solid #000008",
+  // boxShadow: "1",
+}
 
 
 export default function PlayerHome() {
@@ -27,6 +63,11 @@ export default function PlayerHome() {
   const [matchCount, setMatchCount] = useState<number>(0)
   const [evict, setEvict] = useState<string>("")
   const [allPlayers, setAllPlayers] = useState<any>(false)
+  const [leaderboard, setLeaderboard] = useState<any[]>([])
+
+  const [open, setOpen] = useState(false);
+  const handleOpen = () => setOpen(true);
+  const handleClose = () => setOpen(false);
 
   async function checkExistingGameData(existingDetails: any) {
     let players: any[] = []
@@ -136,6 +177,7 @@ export default function PlayerHome() {
       setTurn(error.isTurn)
       setIsPlaying(error.isPlaying)
       setHasWon(error.hasWon)
+      setLeaderboard(error.leaderBoard.sort((a: any, b: any) => Number(b.rounds) - Number(a.rounds)))
       if (error.ownership) {
         let allPlayersList = [{ nickName: "", id: "" }]
         setAllPlayers([...allPlayersList, error.ownership.filter((player: any) => player.id != localData.playerId)].flat())
@@ -143,8 +185,10 @@ export default function PlayerHome() {
       if (error.winningPattern) {
         setWinningPattern(error.winningPattern)
         setMatchCount(0)
+        handleOpen()
       } else {
         setWinningPattern(error.played)
+        handleClose()
       }
       if (localData.playerId) {
         setIsLoading(false)
@@ -161,12 +205,17 @@ export default function PlayerHome() {
     const dataRef = doc(db, "games", localData.roomId)
     const gameDoc = await getDoc(dataRef)
     if (gameDoc.exists()) {
+      const defaultPattern = gameDoc.data().default
       const thePlayers = gameDoc.data().players
       const currentTurn = Number(gameDoc.data().turn)
       const newTurn = currentTurn < thePlayers.length - 1 ? currentTurn + 1 : 0
       const thisPlayer = gameDoc.data().players.find((player: any) => player.id == localData.playerId)
       const thisPlayerIndex = gameDoc.data().players.findIndex((player: any) => player.id == localData.playerId)
       thisPlayer.played = currentPattern
+      const matched = isIdentical(currentPattern, defaultPattern)
+      if (matched) {
+        thisPlayer.roundsWon = (Number(thisPlayer.roundsWon) + 1).toString()
+      }
       const newPlayers = thePlayers.map((player: any) => {
         if (player.id == localData.playerId) {
           return thisPlayer
@@ -188,7 +237,7 @@ export default function PlayerHome() {
     }
   }
 
-  async function reset() {
+  async function reset(action?: string) {
     setMatchCount(0)
     if (!isWon && !hasWon) {
       console.log("reset clicked")
@@ -201,6 +250,9 @@ export default function PlayerHome() {
       const newDefault = shuffleArray(gameDoc.data().default)
       const playsReset = thePlayers.map((player: any) => {
         player.played = ["", "", "", ""]
+        if (action == "reset") {
+          player.roundsWon = "0"
+        }
         return player
       })
       await updateDoc(dataRef, {
@@ -208,6 +260,7 @@ export default function PlayerHome() {
         turn: "0",
         default: newDefault
       })
+      handleClose()
       console.log("Reset")
     }
   }
@@ -256,7 +309,7 @@ export default function PlayerHome() {
         </div>
         <button onClick={() => { exitGame() }} className={`border ${isLoading || allPlayers ? "hidden" : ""} p-2 rounded text-[#fffff0] active:text-[#fffff0] active:bg-[red] bg-[#1f606d]`}>Leave Game</button>
         <div className="flex flex-col">
-          <button onClick={() => { reset() }} className={`border delet p-2 font-[600] active:bg-[#000080] active:text-[#fffff0] bg-[#fffff0] text-[#000080] rounded mt-[20px] ${isWon ? "" : hasWon ? "" : "hidden"}`}>Reset</button>
+          {/* <button onClick={() => { reset() }} className={`border delet p-2 font-[600] active:bg-[#000080] active:text-[#fffff0] bg-[#fffff0] text-[#000080] rounded mt-[20px] ${isWon ? "" : hasWon ? "" : "hidden"}`}>Reset</button> */}
           <button onClick={() => { play() }} className={`border ${isLoading ? "hidden" : ""} text-[#f6ebf4] active:bg-[#f6ebf4] active:text-[#338f1f] bg-[#338f1f] p-2 font-[600] rounded`}>Play Selection</button>
         </div>
       </div>
@@ -267,10 +320,47 @@ export default function PlayerHome() {
           <Image alt='' src={"/images/loading-state.svg"} fill={true} />
         </div>
       </div>
-      <div className={`${allPlayers ? "flex" : "hidden"} justify-end absolute bottom-[10px] w-[350px] gap-[5px] borde`}>
-        <button onClick={() => { copyToClipboard(localData.url) }} className='border box-border font-[500] active:bg-[white] active:text-[green] flex justify-center items-center text-[15px] w-[85px] h-[35px]  bg-[green] text-[white] rounded-[5px]'> Copy Link </button>
-        <button onClick={() => { endGame() }} className={`border ${isLoading || !allPlayers ? "hidden" : "text-[#fffff0] active:text-[red] active:bg-[#fffff0] bg-[red]"} px-[3px] rounded`}>End Game</button>
+      <div className={` borde justify-between flex absolute bottom-[10px] w-[350px] gap-[5px] borde`}>
+        <Button sx={leaderBoardButton} className="h-[35px]" onClick={() => { handleOpen() }}>Leaderboard</Button>
+        <div className={`${allPlayers ? "flex" : "hidden"}`}>
+          <button onClick={() => { copyToClipboard(localData.url) }} className='border  box-border font-[500] active:bg-[white] active:text-[green] flex justify-center items-center text-[15px] w-[85px] h-[35px]  bg-[green] text-[white] rounded-[5px]'> Copy Link </button>
+          <button onClick={() => { endGame() }} className={`border ${isLoading || !allPlayers ? "hidden" : "text-[#fffff0] active:text-[red] active:bg-[#fffff0] bg-[red]"} px-[3px] rounded`}>End Game</button>
+        </div>
       </div>
+      <Modal
+        open={open}
+        onClose={handleClose}
+        aria-labelledby="modal-modal-title"
+        aria-describedby="modal-modal-description"
+      >
+        <Box sx={style}>
+          <Table sx={{ width: 350 }} aria-label="simple table">
+            <TableHead>
+              <TableRow>
+                <TableCell>Player</TableCell>
+                <TableCell align="right">Rounds won</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {leaderboard.map((row) => (
+                <TableRow
+                  key={row.nickName}
+                  sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
+                >
+                  <TableCell component="th" scope="row">
+                    {row.nickName}
+                  </TableCell>
+                  <TableCell align="right">{row.rounds}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+          <Box>
+            <Button sx={buttonStyle} disabled={isWon || hasWon ? false : !isWon || !hasWon ? true : false} onClick={() => { reset() }} className={`border border-[#000008]`}>Next Round</Button>
+            <Button sx={buttonStyle} disabled={isWon || hasWon ? false : !isWon || !hasWon ? true : false} onClick={() => { reset("reset") }} className={`border border-[#000008] ml-[10px]`}>Reset Game</Button>
+          </Box>
+        </Box>
+      </Modal>
     </main>
   )
 }
