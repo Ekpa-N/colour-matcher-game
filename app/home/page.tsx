@@ -224,16 +224,19 @@ export default function PlayerHome() {
   }
 
   return (
-    <main className="flex relative flex-col gap-[10px] items-center justify-center p-2">
-      <h2 className={`font-[600]`}> Colour Match</h2>
-      <div className={`borde ${isLoading ? "hidden" : ""} text-center mt-[5px] w-[250px] ${isWon || hasWon ? "fancy" : ""}  ${winningPattern ? "" : ""}`}>
+    <main className="flex relative flex-col gap-[10px] border h-[700px] items-center justify-start pt-[20px] px-[2px]">
+      <h2 className={`font-[600] text-[#000080]`}> Colour Match</h2>
+      <div className={`borde ${isLoading ? "hidden" : ""} text-center mt-[3px] w-[200px] ${isWon || hasWon ? "fancy" : ""}  ${winningPattern ? "" : ""}`}>
         <ColourMatcher type="win" pattern={winningPattern} toChange={toChange} switchColour={switchColour} />
       </div>
-      <div className={`p-2 ${isLoading ? "hidden" : ""} border rounded-[10px] font-[700] flex justify-center items-center text-center fanc h-[60px] w-[250px]`}>
-        {`${isWon ? "You have won this round!" : hasWon ? hasWon : turn ? "Your turn" : isPlaying}`}
+      <div className="flex w-[350px] justify-between">
+        <div className={`p-2 ${isLoading ? "hidden" : ""} border rounded-[10px] font-[700] flex justify-center text-[#000080] items-center text-center text-[15px] fanc h-[60px] w-[180px]`}>
+          {`${isWon ? "You have won this round!" : hasWon ? hasWon : turn ? "Your turn" : isPlaying}`}
+        </div>
+        <div className={` ${isLoading ? "hidden" : "border rounded-[10px] font-[700] flex justify-center items-center text-center text-[#000080] text-[15px] fanc h-[60px] w-[150px]"}`}>You matched {matchCount}</div>
       </div>
-      <div className={` ${isLoading ? "hidden" : "border rounded-[10px] font-[700] flex justify-center items-center text-center fanc h-[60px] w-[250px]"}`}>You matched {matchCount}</div>
-      <div className={`flex ${isLoading ? "hidden" : ""} flex-col w-[350px]  gap-[20px]`}>
+
+      <div className={`flex ${isLoading ? "hidden" : ""} flex-col w-[350px]  gap-[10px]`}>
         <ColourMatcher type="play" pattern={currentPattern} toChange={toChange} switchColour={switchColour} />
         <ColourMatcher type="default" pattern={pattern} toChange={toChange} switchColour={switchColour} />
       </div>
@@ -252,19 +255,22 @@ export default function PlayerHome() {
           </div>
         </div>
         <button onClick={() => { exitGame() }} className={`border ${isLoading || allPlayers ? "hidden" : ""} p-2 rounded text-[#fffff0] active:text-[#fffff0] active:bg-[red] bg-[#1f606d]`}>Leave Game</button>
-        <button onClick={() => { play() }} className={`border ${isLoading ? "hidden" : ""} text-[#f6ebf4] active:bg-[#f6ebf4] active:text-[#338f1f] bg-[#338f1f] p-2 font-[600] rounded`}>Play Selection</button>
+        <div className="flex flex-col">
+          <button onClick={() => { reset() }} className={`border delet p-2 font-[600] active:bg-[#000080] active:text-[#fffff0] bg-[#fffff0] text-[#000080] rounded mt-[20px] ${isWon ? "" : hasWon ? "" : "hidden"}`}>Reset</button>
+          <button onClick={() => { play() }} className={`border ${isLoading ? "hidden" : ""} text-[#f6ebf4] active:bg-[#f6ebf4] active:text-[#338f1f] bg-[#338f1f] p-2 font-[600] rounded`}>Play Selection</button>
+        </div>
       </div>
-      <button onClick={() => { reset() }} className={`border p-2 rounded mt-[20px] ${isWon ? "" : hasWon ? "" : "hidden"}`}>Reset</button>
-      <div className={`${allPlayers ? "flex" : "hidden"} justify-between w-[350px] gap-[5px] borde mt-[10px]`}>
-        <input value={localData.url} readOnly className='border text-[9px] text-center outline-none px-[2px] grow' />
-        <button onClick={() => { copyToClipboard(localData.url) }} className='border box-border font-[500] active:bg-[white] active:text-[green] flex justify-center items-center text-[15px] w-[85px] h-[35px]  bg-[green] text-[white] rounded-[5px]'> Copy Link </button>
-      </div>
+
+
       <div className={`absolute border text-black w-full ${isLoading ? "" : "hidden"} flex items-center justify-center h-full`}>
         <div className={`relative borde h-[50px] w-[50px] mt-[250px]`}>
           <Image alt='' src={"/images/loading-state.svg"} fill={true} />
         </div>
       </div>
-      <button onClick={() => { endGame() }} className={`border ${isLoading ? "hidden" : "text-[#fffff0] active:text-[red] active:bg-[#fffff0] bg-[red]"} p-2 rounded`}>End Game</button>
+      <div className={`${allPlayers ? "flex" : "hidden"} justify-end absolute bottom-[10px] w-[350px] gap-[5px] borde`}>
+        <button onClick={() => { copyToClipboard(localData.url) }} className='border box-border font-[500] active:bg-[white] active:text-[green] flex justify-center items-center text-[15px] w-[85px] h-[35px]  bg-[green] text-[white] rounded-[5px]'> Copy Link </button>
+        <button onClick={() => { endGame() }} className={`border ${isLoading || !allPlayers ? "hidden" : "text-[#fffff0] active:text-[red] active:bg-[#fffff0] bg-[red]"} px-[3px] rounded`}>End Game</button>
+      </div>
     </main>
   )
 }

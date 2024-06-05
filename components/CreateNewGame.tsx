@@ -99,7 +99,7 @@ export default function CreateGamePage() {
         const newGameData = {
             document: roomId,
             defaultPattern: defaultShuffle,
-            player: [{ id: playerID, pattern: shuffledPattern, nickname: gameDetails.nickname, played: ["", "", "", ""] }],
+            player: [{ id: playerID, pattern: shuffledPattern, nickname: gameDetails.nickname, played: ["", "", "", ""], roundsWon: "0" }],
             isNew: true
         }
         try {
@@ -110,7 +110,7 @@ export default function CreateGamePage() {
             })
             if (newGame.status == 200) {
                 setShareLink(`https://colour-matcher-game.vercel.app?id=${roomId}`)
-                localStorage.setItem("colourMatcherPlayerData", JSON.stringify({ roomId: roomId, playerId: playerID, url: `https://colour-matcher-game.vercel.app/?id=${roomId}`, nickname: gameDetails.nickname }))
+                localStorage.setItem("colourMatcherPlayerData", JSON.stringify({ roomId: roomId, playerId: playerID, url: `https://colour-matcher-game.vercel.app?id=${roomId}`, nickname: gameDetails.nickname }))
                 setIsCreated(true)
                 setIsLoading(false)
             }
@@ -144,7 +144,7 @@ export default function CreateGamePage() {
         const newGameData = {
             document: room,
             defaultPattern: [],
-            player: { id: playerID, pattern: shuffledPattern, nickname: gameDetails.nickname, played: ["", "", "", ""] },
+            player: { id: playerID, pattern: shuffledPattern, nickname: gameDetails.nickname, played: ["", "", "", ""], roundsWon:"0" },
             isNew: false
         }
         try {
