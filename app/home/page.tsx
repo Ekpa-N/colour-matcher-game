@@ -14,7 +14,7 @@ import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
 import Modal from '@mui/material/Modal';
 import { ClassNames } from "@emotion/react";
-import { Table, TableBody, TableCell, TableHead, TableRow } from "@mui/material";
+import { List, ListItemText, Table, TableBody, TableCell, TableHead, TableRow } from "@mui/material";
 
 
 const style = {
@@ -29,6 +29,26 @@ const style = {
   display: "flex",
   flexDirection: "column"
 };
+const styleTwo = {
+  position: 'absolute' as 'absolute',
+  top: '40%',
+  left: '50%',
+  transform: 'translate(-50%, -50%)',
+  width: 350,
+  height: 500,
+  bgcolor: '#fffff0',
+  boxShadow: 24,
+  p: 4,
+  display: "flex",
+  flexDirection: "column",
+  overflow: "auto"
+};
+
+const instructionList = {
+  display: "flex",
+  flexDirection: "column",
+  gap: "10px"
+}
 
 const buttonStyle = {
   width: "140px",
@@ -66,8 +86,12 @@ export default function PlayerHome() {
   const [leaderboard, setLeaderboard] = useState<any[]>([])
 
   const [open, setOpen] = useState(false);
+  const [instructions, setInstructions] = useState(false);
+
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
+  const handleInstructionsOpen = () => setInstructions(true);
+  const handleInstructionsClose = () => setInstructions(false);
 
   async function checkExistingGameData(existingDetails: any) {
     let players: any[] = []
@@ -278,6 +302,9 @@ export default function PlayerHome() {
 
   return (
     <main className="flex relative flex-col gap-[10px] border h-[700px] items-center justify-start pt-[20px] px-[2px]">
+      <div className="absolute border right-[1px]">
+
+      </div>
       <h2 className={`font-[600] text-[#000080]`}> Colour Match</h2>
       <div className={`borde ${isLoading ? "hidden" : ""} text-center mt-[3px] w-[200px] ${isWon || hasWon ? "fancy" : ""}  ${winningPattern ? "" : ""}`}>
         <ColourMatcher type="win" pattern={winningPattern} toChange={toChange} switchColour={switchColour} />
@@ -308,8 +335,9 @@ export default function PlayerHome() {
           </div>
         </div>
         <button onClick={() => { exitGame() }} className={`border ${isLoading || allPlayers ? "hidden" : ""} p-2 rounded text-[#fffff0] active:text-[#fffff0] active:bg-[red] bg-[#1f606d]`}>Leave Game</button>
-        <div className="flex flex-col">
+        <div className="flex gap-[5px] flex-col">
           {/* <button onClick={() => { reset() }} className={`border delet p-2 font-[600] active:bg-[#000080] active:text-[#fffff0] bg-[#fffff0] text-[#000080] rounded mt-[20px] ${isWon ? "" : hasWon ? "" : "hidden"}`}>Reset</button> */}
+          <div className={`${isLoading ? "hidden" : ""}`}><Button sx={leaderBoardButton} className="h-[35px]" onClick={() => { handleInstructionsOpen() }}>Instructions</Button></div>
           <button onClick={() => { play() }} className={`border ${isLoading ? "hidden" : ""} text-[#f6ebf4] active:bg-[#f6ebf4] active:text-[#338f1f] bg-[#338f1f] p-2 font-[600] rounded`}>Play Selection</button>
         </div>
       </div>
@@ -321,7 +349,9 @@ export default function PlayerHome() {
         </div>
       </div>
       <div className={` borde justify-between flex absolute bottom-[10px] w-[350px] gap-[5px] borde`}>
-        <Button sx={leaderBoardButton} className="h-[35px]" onClick={() => { handleOpen() }}>Leaderboard</Button>
+        <div className={`${isLoading ? "hidden" : ""}`}>
+          <Button sx={leaderBoardButton} className="h-[35px]" onClick={() => { handleOpen() }}>Leaderboard</Button>
+        </div>
         <div className={`${allPlayers ? "flex" : "hidden"}`}>
           <button onClick={() => { copyToClipboard(localData.url) }} className='border  box-border font-[500] active:bg-[white] active:text-[green] flex justify-center items-center text-[15px] w-[85px] h-[35px]  bg-[green] text-[white] rounded-[5px]'> Copy Link </button>
           <button onClick={() => { endGame() }} className={`border ${isLoading || !allPlayers ? "hidden" : "text-[#fffff0] active:text-[red] active:bg-[#fffff0] bg-[red]"} px-[3px] rounded`}>End Game</button>
@@ -359,6 +389,30 @@ export default function PlayerHome() {
             <Button sx={buttonStyle} disabled={isWon || hasWon ? false : !isWon || !hasWon ? true : false} onClick={() => { reset() }} className={`border border-[#000008]`}>Next Round</Button>
             <Button sx={buttonStyle} disabled={isWon || hasWon ? false : !isWon || !hasWon ? true : false} onClick={() => { reset("reset") }} className={`border border-[#000008] ml-[10px]`}>Reset Game</Button>
           </Box>
+        </Box>
+      </Modal>
+      <Modal
+        open={instructions}
+        onClose={handleInstructionsClose}
+        aria-labelledby="modal-modal-title"
+        aria-describedby="modal-modal-description"
+      >
+        <Box sx={styleTwo}>
+          <Typography variant="h4" component="h2">
+            How to play.
+          </Typography>
+          <List sx={instructionList}>
+            <ListItemText primary="Tap/click any coloured circle to highlight it and select that colour." />
+            <ListItemText primary="Next, tap/click any of the four circles with a plus sign to apply your selected colour." />
+            <ListItemText primary="Repeat steps 1 and 2 above as many times as you like to create a pattern with all four colours." />
+            <ListItemText primary={`Click/tap the "Play Selection" button to play your pattern and wait for your opponent.`} />
+            <ListItemText primary={`The turn notification bar at the top left displays whose turn it is.`} />
+            <ListItemText primary={`The hint bar at the top right displays how many correct colour matches you played on your last turn.`} />
+            <ListItemText primary={`A round ends when someone plays a pattern that matches the game's secret pattern.`} />
+            <ListItemText primary={`The leaderboard displays a record of players' scores starting with the hightest.`} />
+            <ListItemText primary={`Click/tap the "Next Round" button to keep the scores and restart the game with a new pattern.`} />
+            <ListItemText primary={`Click/tap the "Reset" button to erase the scores and restart the game with a new pattern.`} />
+          </List>
         </Box>
       </Modal>
     </main>
