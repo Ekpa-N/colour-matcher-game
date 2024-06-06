@@ -2,7 +2,7 @@
 import { GoogleLogin } from '@react-oauth/google';
 import { io } from 'socket.io-client';
 import { ReactEventHandler, useEffect, useState } from 'react';
-import { generateRandomString, copyToClipboard, shuffleArray } from '@/components/helpers';
+import { generateRandomString, copyToClipboard, shuffleArray, removeSpaces } from '@/components/helpers';
 import { useRouter, useSearchParams } from 'next/navigation';
 import axios from 'axios';
 import { v4 as uuidv4 } from "uuid"
@@ -92,7 +92,8 @@ export default function CreateGamePage() {
             router.push(`/home`)
             return
         }
-        const roomId = generateRandomString() + gameDetails.nickname
+        const trimmedName = removeSpaces(gameDetails.nickname).trim()
+        const roomId = generateRandomString() + trimmedName
         const shuffledPattern = shuffleArray(pattern)
         const defaultShuffle = shuffleArray(pattern)
         const playerID = uuidv4()

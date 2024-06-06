@@ -67,6 +67,10 @@ function shuffleArray(arr: string[]): string[] {
   return shuffledArray;
 }
 
+function removeSpaces(str: string) {
+  return str.replace(/\s+/g, '');
+}
+
 // function useFirestoreSubscription(collectionItem: string) {
 //   const { data, error } = useSWRSubscription(
 //       ["colours", collectionItem],
@@ -116,4 +120,4 @@ function matchChecker(arr1: string[], arr2: string[]): number {
 }
 
 
-export { generateRandomString, copyToClipboard, shuffleArray, isIdentical, matchChecker, getInsult }
+export { generateRandomString, copyToClipboard, shuffleArray, isIdentical, matchChecker, getInsult, removeSpaces }
