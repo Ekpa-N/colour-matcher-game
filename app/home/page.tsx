@@ -48,7 +48,8 @@ const styleTwo = {
 const instructionList = {
   display: "flex",
   flexDirection: "column",
-  gap: "10px"
+  gap: "10px",
+  borderRadius: "10px"
 }
 
 const buttonStyle = {
@@ -128,11 +129,20 @@ export default function PlayerHome() {
   const [instructions, setInstructions] = useState(false);
   const [insult, setInsult] = useState<string>("")
   const [currentRound, setCurrentRound] = useState<string>("")
-
+  const [isOwner, setIsOwner] = useState<boolean>(false)
+  const [showPlayers, setShowPlayers] = useState<boolean>(false)
+  
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
   const handleInstructionsOpen = () => setInstructions(true);
   const handleInstructionsClose = () => setInstructions(false);
+  const playersRef = useRef<HTMLButtonElement>(null)
+  
+  function handleClickOutside(event: MouseEvent) {
+    if (playersRef.current && !playersRef.current.contains(event.target as Node)) {
+      setShowPlayers(false);
+    }
+  };
 
   async function checkExistingGameData(existingDetails: any) {
     let players: any[] = []
@@ -163,15 +173,12 @@ export default function PlayerHome() {
     const gameDoc = await deleteDoc(dataRef)
   }
 
-  async function evictPlayer() {
-    if (evict == "") {
-      return
-    }
+  async function evictPlayer(id: string) {
     const dataRef = doc(db, "games", localData.roomId)
     const gameDoc = await getDoc(dataRef)
     if (gameDoc.exists()) {
       const thePlayers = gameDoc.data().players
-      let newPlayers = thePlayers.filter((player: any) => player.id !== evict)
+      let newPlayers = thePlayers.filter((player: any) => player.id !== id)
       let currentTurn = gameDoc.data().turn
       // debugger
       if (newPlayers.length <= Number(currentTurn)) {
@@ -232,6 +239,19 @@ export default function PlayerHome() {
   }, [])
 
   useEffect(() => {
+    if (showPlayers) {
+      window.addEventListener('click', handleClickOutside);
+    } else {
+      window.removeEventListener('click', handleClickOutside);
+    }
+
+    // Clean up event listener on component unmount
+    return () => {
+      window.removeEventListener('click', handleClickOutside);
+    };
+  }, [showPlayers]);
+
+  useEffect(() => {
     if (error == "removed") {
       localStorage.removeItem("colourMatcherPlayerData")
       router.push("/")
@@ -243,11 +263,12 @@ export default function PlayerHome() {
       setTurn(error.isTurn)
       setIsPlaying(error.isPlaying)
       setHasWon(error.hasWon)
+      setIsOwner(error.isOwner)
       setLeaderboard(error.leaderBoard.sort((a: any, b: any) => Number(b.rounds) - Number(a.rounds)))
-      if (error.ownership) {
-        let allPlayersList = [{ nickName: "", id: "" }]
-        setAllPlayers([...allPlayersList, error.ownership.filter((player: any) => player.id != localData.playerId)].flat())
-      }
+      // if (error.ownership) {
+      // let allPlayersList = [{ nickName: "", id: "" }]
+      setAllPlayers(error.ownership.filter((player: any) => player.id != localData.playerId))
+      // }
       if (error.winningPattern) {
         setWinningPattern(error.winningPattern)
         setMatchCount(0)
@@ -371,14 +392,14 @@ export default function PlayerHome() {
       </div>
 
 
-      <div className="flex flex-col border border-black rounded-[7px] w-[90%] pb-[27px] items-center justify-start pt-[17px] px-[2px]">
+      <div className="flex flex-col border border-black rounded-[7px] w-[90%] md:w-[400px] pb-[27px] items-center justify-start pt-[17px] px-[2px]">
         <div className="flex gap-[5px]">
-          <div className={`${isLoading ? "hidden" : ""} border border-black rounded-[10px] font-[700] flex justify-center items-center text-center font-be text-[8px] h-[13px] w-[70px]`}>
+          <div className={`${isLoading ? "hidden" : ""} border border-black rounded-[10px] font-[700] flex justify-center items-center text-center font-be text-[8px] h-[13px] px-[4px] min-w-[70px]`}>
             {`${isWon ? "You have won this round!" : hasWon ? hasWon : turn ? "Your turn" : isPlaying}`}
           </div>
           <div className={` ${isLoading ? "hidden" : "border border-black rounded-[10px] font-[700] flex justify-center items-center text-center font-be text-[8px] h-[13px] w-[70px]"}`}>You matched {matchCount}</div>
         </div>
-        <div className={`borde ${isLoading ? "hidden" : ""} text-center mt-[5px] h-[24px] w-[107px] ${isWon || hasWon ? "fancy" : ""}  ${winningPattern ? "" : ""}`}>
+        <div className={`borde ${isLoading ? "hidden" : ""} text-center mt-[5px] h-[24px] w-[107px] ${isWon || hasWon ? "fanc" : ""}  ${winningPattern ? "" : ""}`}>
           <ColourMatcher type="win" pattern={winningPattern} toChange={toChange} switchColour={switchColour} />
         </div>
 
@@ -392,8 +413,8 @@ export default function PlayerHome() {
 
 
       <div className="flex w-[350px] borde min-h-[98px] items-end justify-between p-[2px]">
-        <div className={`flex justify-between borde h-full flex-col ${allPlayers ? "" : "hidden"}`}>
-          {/* <h2 className="borde w-full">Kickout Players</h2> */}
+        {/* <div className={`flex justify-between borde h-full flex-col ${allPlayers ? "" : "hidden"}`}>
+          
           <div className="flex flex-col min-h-[80px] borde gap-[5px]">
             <h2 className="text-[green]">Players List</h2>
             <select onChange={(e) => { handleSelectEvict(e) }} name='kickout' className='border w-[125px] rounded-[10px] h-[35px] outline-none'>
@@ -403,15 +424,19 @@ export default function PlayerHome() {
             </select>
             <button onClick={() => { evictPlayer() }} className="p-2 rounded border rounded-[10px] text-[#fffff0] active:text-[#fffff0] active:bg-[red] bg-[#1f606d]">Kickout Player</button>
           </div>
-        </div>
-        <button onClick={() => { exitGame() }} className={`border ${isLoading || allPlayers ? "hidden" : ""} p-2 rounded text-[#fffff0] active:text-[#fffff0] active:bg-[red] bg-[#1f606d]`}>Leave Game</button>
+        </div> */}
+        {/* <button onClick={() => { exitGame() }} className={`border ${isLoading || allPlayers ? "hidden" : ""} p-2 rounded text-[#fffff0] active:text-[#fffff0] active:bg-[red] bg-[#1f606d]`}>Leave Game</button> */}
         <div className="flex gap-[5px] flex-col">
           {/* <button onClick={() => { reset() }} className={`border delet p-2 font-[600] active:bg-[#000080] active:text-[#fffff0] bg-[#fffff0] text-[#000080] rounded mt-[20px] ${isWon ? "" : hasWon ? "" : "hidden"}`}>Reset</button> */}
-          <div className={`${isLoading ? "hidden" : ""}`}><Button sx={leaderBoardButton} className="h-[35px]" onClick={() => { handleInstructionsOpen() }}>Instructions</Button></div>
+          {/* <div className={`${isLoading ? "hidden" : ""}`}><Button sx={leaderBoardButton} className="h-[35px]" onClick={() => { handleInstructionsOpen() }}>Instructions</Button></div> */}
           {/* <button onClick={() => { play() }} className={`border ${isLoading ? "hidden" : ""} text-[#f6ebf4] active:bg-[#f6ebf4] active:text-[#338f1f] bg-[#338f1f] p-2 font-[600] rounded`}>Play Selection</button> */}
         </div>
       </div>
       <button onClick={() => { play() }} className={`border ${isLoading ? "hidden" : ""} border-black active:bg-[#f6ebf4] active:text-[#338f1f] w-[328px] active:text-[#fff] h-[44px] rounded-[50px] font-be font-[600]`}>Play Your Selection</button>
+      <div className="borde justify-end flex w-[328px]">
+        <button onClick={() => { exitGame() }} className={`border ${isOwner ? "hidden" : ""} border-black active:bg-[#f6ebf4] active:text-[#338f1f] w-[156px] active:text-[#fff] h-[44px] rounded-[50px] font-be font-[600]`}>Leave Game</button>
+        <button onClick={() => { endGame() }} className={`border ${!isOwner ? "hidden" : ""} border-black active:bg-[#f6ebf4] active:text-[#338f1f] w-[156px] active:text-[#fff] h-[44px] rounded-[50px] font-be font-[600]`}>End Game</button>
+      </div>
 
 
       <div className={`absolute border text-black w-full ${isLoading ? "" : "hidden"} flex items-center justify-center h-full`}>
@@ -419,14 +444,43 @@ export default function PlayerHome() {
           <Image alt='' src={"/images/loading-state.svg"} fill={true} />
         </div>
       </div>
+      <div className={`borde mt-[29px] w-[280px] justify-between flex relative`}>
+        <div className={`${showPlayers ? "" : "hidden"} absolute border border-[red] w-[100px] text-[12px] bottom-[45px] bg-[#F5F5F5] p-[10px] rounded-[10px]`}>
+          {allPlayers && allPlayers.map((player: any, idx: number) => {
+            return (
+              <div key={idx} className="flex items-center gap-[5px]">
+                <button onClick={() => { evictPlayer(player.id) }} className={`w-[13px] h-[13px] cursor-pointer  rounded-[50%] bg-[#F86464] ${isOwner ? "flex" : "hidden"} justify-center items-center`}>
+                  <div className="bg-white h-[2px] w-[8px] rounded-[2px]"></div>
+                </button>
+                <h2>{player.nickName}</h2>
+              </div>
+            )
+          })}
+        </div>
+        <button ref={playersRef} onClick={()=>{setShowPlayers(!showPlayers)}} className="relative w-[35px] h-[35px]">
+          <Image alt="Players" fill={true} src="../icons/player-icon.svg" />
+        </button>
+        <button onClick={() => { handleOpen() }} className="relative w-[35px] h-[35px]">
+          <Image alt="Players" fill={true} src="../icons/trophy.svg" />
+        </button>
+        <button onClick={() => { handleInstructionsOpen() }} className="relative w-[35px] h-[35px]">
+          <Image alt="Players" fill={true} src="../icons/help.svg" />
+        </button>
+        <button className="relative w-[35px] h-[35px]">
+          <Image alt="Players" fill={true} src="../icons/modes.svg" />
+        </button>
+        <button onClick={() => { copyToClipboard(localData.url) }} className={` ${allPlayers ? "relative w-[35px] h-[35px]" : "hidden"}`}>
+          <Image alt="Players" fill={true} src="../icons/copy-link.svg" />
+        </button>
+      </div>
       <div className={` borde justify-between flex absolute bottom-[10px] w-[350px] gap-[5px] borde`}>
         <div className={`${isLoading ? "hidden" : ""}`}>
-          <Button sx={leaderBoardButton} className="h-[35px]" onClick={() => { handleOpen() }}>Leaderboard</Button>
+          {/* <Button sx={leaderBoardButton} className="h-[35px]" onClick={() => { handleOpen() }}>Leaderboard</Button> */}
         </div>
-        <div className={`${allPlayers ? "flex" : "hidden"}`}>
+        {/* <div className={`${allPlayers ? "flex" : "hidden"}`}>
           <button onClick={() => { copyToClipboard(localData.url) }} className='border  box-border font-[500] active:bg-[white] active:text-[green] flex justify-center items-center text-[15px] w-[85px] h-[35px]  bg-[green] text-[white] rounded-[5px]'> Copy Link </button>
           <button onClick={() => { endGame() }} className={`border ${isLoading || !allPlayers ? "hidden" : "text-[#fffff0] active:text-[red] active:bg-[#fffff0] bg-[red]"} px-[3px] rounded`}>End Game</button>
-        </div>
+        </div> */}
       </div>
       <Modal
         open={open}
