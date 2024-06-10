@@ -15,6 +15,7 @@ import Typography from '@mui/material/Typography';
 import Modal from '@mui/material/Modal';
 import { ClassNames } from "@emotion/react";
 import { List, ListItemText, Table, TableBody, TableCell, TableHead, TableRow } from "@mui/material";
+import LoadingScreen from "@/components/Loader";
 
 
 const style = {
@@ -126,6 +127,7 @@ export default function PlayerHome() {
   const [open, setOpen] = useState(false);
   const [instructions, setInstructions] = useState(false);
   const [insult, setInsult] = useState<string>("")
+  const [currentRound, setCurrentRound] = useState<string>("")
 
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
@@ -236,6 +238,7 @@ export default function PlayerHome() {
     }
     if (error && error.hasOwnProperty("played")) {
       // setCurrentPattern(error.played)
+      setCurrentRound(error.currentRound)
       setIsWon(error.isWon)
       setTurn(error.isTurn)
       setIsPlaying(error.isPlaying)
@@ -248,10 +251,10 @@ export default function PlayerHome() {
       if (error.winningPattern) {
         setWinningPattern(error.winningPattern)
         setMatchCount(0)
-        if(error.isWon) {
+        if (error.isWon) {
           setInsult(getInsult(winnerInsults))
         }
-        if(!error.isWon && error.hasWon) {
+        if (!error.isWon && error.hasWon) {
           setInsult(getInsult(loserInsults))
         }
         handleOpen()
@@ -317,6 +320,7 @@ export default function PlayerHome() {
     if (gameDoc.exists()) {
       const thePlayers = gameDoc.data().players
       const newDefault = shuffleArray(gameDoc.data().default)
+      const nextRound = Number(gameDoc.data().round) + 1
       const playsReset = thePlayers.map((player: any) => {
         player.played = ["", "", "", ""]
         if (action == "reset") {
@@ -327,7 +331,8 @@ export default function PlayerHome() {
       await updateDoc(dataRef, {
         players: playsReset,
         turn: "0",
-        default: newDefault
+        default: newDefault,
+        round: action == "reset" ? "0" : nextRound.toString()
       })
       handleClose()
       console.log("Reset")
@@ -345,12 +350,26 @@ export default function PlayerHome() {
     setToChange(pattern[idx])
   }
 
+  if (isLoading) {
+    return (
+      <div className="flex w-full h-[600px] justify-center items-center">
+        <LoadingScreen type="screen" />
+      </div>
+    )
+  }
+
   return (
     <main className="flex relative flex-col gap-[10px] border h-[700px] items-center justify-start pt-[20px] px-[2px]">
       <div className="absolute border right-[1px]">
-
       </div>
-      <h2 className={`font-[600] text-[#000080]`}> Colour Match</h2>
+      <div className='relative w-[104px] h-[24px] self-center'>
+        <Image alt='logo' src="/images/colour-matcher-loader.svg" fill={true} />
+      </div>
+
+      <div className="w-[67px] flex justify-center text-[11px] pb-[15px] h-[13px] rounded-[7px] bg-[black] text-[white] font-be">
+        Round {currentRound}
+      </div>
+
       <div className={`borde ${isLoading ? "hidden" : ""} text-center mt-[3px] w-[200px] ${isWon || hasWon ? "fancy" : ""}  ${winningPattern ? "" : ""}`}>
         <ColourMatcher type="win" pattern={winningPattern} toChange={toChange} switchColour={switchColour} />
       </div>
@@ -405,8 +424,8 @@ export default function PlayerHome() {
       <Modal
         open={open}
         onClose={handleClose}
-        aria-labelledby="modal-modal-title"
-        aria-describedby="modal-modal-description"
+      // aria-labelledby="modal-modal-title"
+      // aria-describedby="modal-modal-description"
       >
         <Box sx={style}>
           <Table sx={{ width: 350 }} aria-label="simple table">

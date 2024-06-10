@@ -1,14 +1,13 @@
 "use client"
-import { GoogleLogin } from '@react-oauth/google';
-import { io } from 'socket.io-client';
-import { ReactEventHandler, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { generateRandomString, copyToClipboard, shuffleArray, removeSpaces } from '@/components/helpers';
 import { useRouter, useSearchParams } from 'next/navigation';
 import axios from 'axios';
 import { v4 as uuidv4 } from "uuid"
 import Image from 'next/image';
 import { db } from '@/firebase';
-import { collection, addDoc, getDocs, limit, query, where, doc, updateDoc, setDoc, getDoc, startAt, startAfter, getCountFromServer, serverTimestamp, endBefore } from "firebase/firestore";
+import LoadingScreen from './Loader';
+import { doc, getDoc } from "firebase/firestore";
 
 
 export default function CreateGamePage() {
@@ -24,6 +23,7 @@ export default function CreateGamePage() {
     const [loadError, setLoadError] = useState<boolean>(false)
 
 
+
     function handleInputChange(e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>): void {
         setGameDetails({ ...gameDetails, [e.target.name]: e.target.value })
     }
@@ -37,10 +37,10 @@ export default function CreateGamePage() {
 
             if ((game && existingDetails) && (id == existingDetails.roomId)) {
                 await checkExistingGameData(existingDetails)
-                return               
+                return
             }
             if ((game && existingDetails) && (id != existingDetails.roomId)) {
-                localStorage.removeItem("colourMatcherPlayerData")             
+                localStorage.removeItem("colourMatcherPlayerData")
             }
 
             if (game) {
@@ -135,7 +135,6 @@ export default function CreateGamePage() {
         // router.push(`/home?id=${roomId}&nickname=${gameDetails.nickname}`)
     }
 
-
     async function joinNewGame(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault()
         setIsLoading(true)
@@ -145,7 +144,7 @@ export default function CreateGamePage() {
         const newGameData = {
             document: room,
             defaultPattern: [],
-            player: { id: playerID, pattern: shuffledPattern, nickname: gameDetails.nickname, played: ["", "", "", ""], roundsWon:"0" },
+            player: { id: playerID, pattern: shuffledPattern, nickname: gameDetails.nickname, played: ["", "", "", ""], roundsWon: "0" },
             isNew: false
         }
         try {
@@ -178,16 +177,14 @@ export default function CreateGamePage() {
 
 
 
-
-
-
-
     return (
-        <main className="flex h-[450px] borde flex-col gap-[20px] items-center justify-start p-2">
-            <form onSubmit={createNewGame} className={`${gameState == "new" ? "flex" : "hidden"} flex-col p-2 border rounded-[5px] border-[green]  w-[350px] items-start box-border`}>
-                <h2 className="self-center">Welcome to Colour Matcher</h2>
-                <label className="borde mt-[5px] w-full rounded px-[2px]" htmlFor="username">Nickname</label>
-                <input value={gameDetails.nickname} onChange={(e) => { handleInputChange(e) }} type="text" placeholder='Enter your nickname' className="w-full border rounded px-[2px] mt-[5px]" name="nickname" />
+        <main className="flex h-[450px] w-full border border-[#DF93D2] rounded flex-col gap-[5px] items-center justify-start p-2 font-poppins">
+            <form onSubmit={createNewGame} className={`${gameState == "new" ? "flex" : "hidden"} flex-col p-2 borde rounded-[5px] border-[green]  w-[350px] items-start box-border`}>
+                <div className='relative w-[184px] h-[64px] self-center'>
+                    <Image alt='logo' src="/images/colour-matcher-loader.svg" fill={true} />
+                </div>
+                {/* <label className="borde mt-[5px] w-full rounded px-[2px]" htmlFor="username">Nickname</label> */}
+                <input value={gameDetails.nickname} onChange={(e) => { handleInputChange(e) }} type="text" placeholder='Enter your nickname' className="w-[327px] h-[44px] rounded-[30px] text-center font-[be] border rounded px-[2px] mt-[28px]" name="nickname" />
                 {/* <label className="borde mt-[20px] w-full" htmlFor="password">How many players?</label>
                 <select value={gameDetails.players} onChange={handleInputChange} name='players' className='borde'>
                     <option value="2">2</option>
@@ -197,20 +194,19 @@ export default function CreateGamePage() {
 
                 <div className="mt-[20px] borde flex flex-col w-full">
                     <div className="w-full flex justify-between">
-                        <button disabled={gameDetails.nickname == "" || isCreated || isLoading} type='submit' className={`px-2 border rounded relative h-[30px] w-[150px] flex justify-center text-[#FFFFF0] active:text-[lightgreen] active:bg-[#FFFFF0] items-center ${isLoading ? "bg-[#FFFFF0]":"bg-[lightgreen]"}`}>
-                            <h2 className={`${isLoading ? "hidden" : ""}`}>Create Game</h2>
-                            <div className={`relative borde h-[25px] w-[30px] ${isLoading ? "" : "hidden"}`}>
-                                <Image alt='' src={"/images/loading-state.svg"} fill={true} />
-                            </div>
+                        <button disabled={gameDetails.nickname == "" || isCreated || isLoading} type='submit' className={`px-2 border rounded relative w-[327px] h-[44px] rounded-[30px] text-center font-[be] justify-center text-[#fff] active:text-[#000] active:bg-[#FFF] items-center bg-[#000] ${isLoading || isCreated ? "hidden": "flex"}`}>
+                            <h2 className={`${isLoading || isCreated ? "hidden" : ""}`}>Create Game</h2>
                         </button>
-                        <button type='submit' className={`px-2 border box-border font-[500] active:bg-[white] active:text-[green] flex justify-center items-center text-[15px] bg-[green] text-white rounded ${isCreated ? "" : "hidden"}`}>Join Game</button>
+                        <button disabled={true} className={`justify-center items-center ${isLoading ? "flex": "hidden"} w-[327px] h-[44px] rounded-[30px]`}>
+                            <LoadingScreen type='button' />
+                        </button>
+                        <button type='submit' className={`px-2 border rounded relative w-[327px] h-[44px] rounded-[30px] text-center font-[be] justify-center text-[#fff] active:text-[#000] active:bg-[#FFF] items-center bg-[#20958E] ${!isCreated || isLoading ? "hidden" : ""}`}>Join Game</button>
                         <input value={"Error occured, try again"} readOnly className={`px-2 borde rounded text-[9px] font-[700] text-[red] ${loadError ? "" : "hidden"}`} />
                     </div>
                 </div>
             </form>
-            <div className={`${gameState == "new" ? "flex" : "hidden"} justify-between gap-[5px] w-[350px] borde mt-[10px]`}>
-                <input value={shareLink} readOnly className='border text-[9px] text-center outline-none px-[2px] grow' />
-                <button disabled={shareLink == ""} onClick={() => { copyToClipboard(shareLink) }} className='border box-border font-[500] active:bg-[white] active:text-[green] flex justify-center items-center text-[15px] w-[85px] h-[35px]  bg-[green] text-[white] rounded-[5px]'> Copy Link </button>
+            <div className={`${gameState == "new" ? "flex" : "hidden"} justify-between w-[350px] borde mt-[5px] flex-col`}>
+                <button onClick={() => { copyToClipboard(shareLink) }} className={`px-2 border rounded relative w-[327px] h-[44px] rounded-[30px] text-center font-[be] justify-center text-[#fff] active:text-[#000] active:bg-[#FFF] items-center bg-[#AFD802]  ${!shareLink ? "hidden" : ""}`}>Copy share link</button>
             </div>
             <form onSubmit={joinNewGame} className={`${gameState == "join" ? "flex" : "hidden"} flex-col p-2 border border-[green] w-[400px] items-start box-border`}>
                 <h2 className="self-center">Welcome to Colour Matcher</h2>
@@ -228,9 +224,6 @@ export default function CreateGamePage() {
                     </div>
                 </div>
             </form>
-
-            
-
 
         </main>
     )
