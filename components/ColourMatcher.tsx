@@ -23,18 +23,18 @@ const ColourMatcher: React.FC<ColourProps> = ({ pattern = [], toChange, switchCo
     };
 
     return (
-        <div className={`border border-blac w-[100%] flex justify-between ${type == "win" ? "rounded-[20px]" : "rounded-[30px]"} p-[3px]`}>
+        <div className={`border-blac w-[100%] flex justify-between ${type == "win" ? "rounded-[20px] border" : "rounded-[30px]"} p-[2px]`}>
             {pattern.map((colour: string, idx: number) => {
 
                 if (type == "win") {
                     return (
-                        <button key={idx} style={{ backgroundColor: colour }} className={`w-[25px] h-[25px] border bg-[#fffff0] text-[#000080]  rounded-[50%]`}>
+                        <button key={idx} style={{ backgroundColor: colour }} className={`w-[19px] h-[19px] border bg-[#fffff0] text-[#000080]  rounded-[50%]`}>
                         </button> 
                     )
                 }
                 if (colour == "") {
                     return (
-                        <button onClick={() => { switchColour(idx, "play") }} key={idx} className={`w-[40px] border bg-[#fffff0] text-[#000080] h-[40px] rounded-[50%]`}>
+                        <button onClick={() => { switchColour(idx, "play") }} key={idx} className={`w-[43px] border bg-[#fffff0] text-[#000080] h-[43px] rounded-[50%]`}>
                             +
                         </button> //style={{backgroundColor: colour}}
                     )

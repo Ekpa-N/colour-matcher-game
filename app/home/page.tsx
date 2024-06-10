@@ -112,7 +112,7 @@ export default function PlayerHome() {
   const [localData, setLocalData] = useState<any>({ nickname: "", playerId: "", url: "", roomId: "12345678" })
   const router = useRouter()
   // const searchParams = useSearchParams()
-  const [pattern, setPattern] = useState<string[]>(["red", "blue", "green", "yellow"])
+  const [pattern, setPattern] = useState<string[]>(["#20958E", "#AFD802", "#DF93D2", "#F7E270"])
   const [currentPattern, setCurrentPattern] = useState<string[]>(["", "", "", ""])
   const [toChange, setToChange] = useState<string>("")
   const [isWon, setIsWon] = useState<boolean>(false)
@@ -359,7 +359,7 @@ export default function PlayerHome() {
   }
 
   return (
-    <main className="flex relative flex-col gap-[10px] border h-[700px] items-center justify-start pt-[20px] px-[2px]">
+    <main className="flex relative flex-col gap-[10px] border  h-[700px] items-center justify-start pt-[20px] px-[2px]">
       <div className="absolute border right-[1px]">
       </div>
       <div className='relative w-[104px] h-[24px] self-center'>
@@ -370,20 +370,26 @@ export default function PlayerHome() {
         Round {currentRound}
       </div>
 
-      <div className={`borde ${isLoading ? "hidden" : ""} text-center mt-[3px] w-[200px] ${isWon || hasWon ? "fancy" : ""}  ${winningPattern ? "" : ""}`}>
-        <ColourMatcher type="win" pattern={winningPattern} toChange={toChange} switchColour={switchColour} />
-      </div>
-      <div className="flex w-[350px] justify-between">
-        <div className={`p-2 ${isLoading ? "hidden" : ""} border rounded-[10px] font-[700] flex justify-center text-[#000080] items-center text-center text-[15px] fanc h-[60px] w-[180px]`}>
-          {`${isWon ? "You have won this round!" : hasWon ? hasWon : turn ? "Your turn" : isPlaying}`}
+
+      <div className="flex flex-col border border-black rounded-[7px] w-[90%] pb-[27px] items-center justify-start pt-[17px] px-[2px]">
+        <div className="flex gap-[5px]">
+          <div className={`${isLoading ? "hidden" : ""} border border-black rounded-[10px] font-[700] flex justify-center items-center text-center font-be text-[8px] h-[13px] w-[70px]`}>
+            {`${isWon ? "You have won this round!" : hasWon ? hasWon : turn ? "Your turn" : isPlaying}`}
+          </div>
+          <div className={` ${isLoading ? "hidden" : "border border-black rounded-[10px] font-[700] flex justify-center items-center text-center font-be text-[8px] h-[13px] w-[70px]"}`}>You matched {matchCount}</div>
         </div>
-        <div className={` ${isLoading ? "hidden" : "border rounded-[10px] font-[700] flex justify-center items-center text-center text-[#000080] text-[15px] fanc h-[60px] w-[150px]"}`}>You matched {matchCount}</div>
+        <div className={`borde ${isLoading ? "hidden" : ""} text-center mt-[5px] h-[24px] w-[107px] ${isWon || hasWon ? "fancy" : ""}  ${winningPattern ? "" : ""}`}>
+          <ColourMatcher type="win" pattern={winningPattern} toChange={toChange} switchColour={switchColour} />
+        </div>
+
+
+        <div className={`flex ${isLoading ? "hidden" : ""}  flex-col items-center w-[202px] mt-[65px]  gap-[22px] relative`}>
+          <ColourMatcher type="play" pattern={currentPattern} toChange={toChange} switchColour={switchColour} />
+          <div className="border-t w-[259px] border-[#D4D8BE] top-[49%] absolute"></div>
+          <ColourMatcher type="default" pattern={pattern} toChange={toChange} switchColour={switchColour} />
+        </div>
       </div>
 
-      <div className={`flex ${isLoading ? "hidden" : ""} flex-col w-[350px]  gap-[10px]`}>
-        <ColourMatcher type="play" pattern={currentPattern} toChange={toChange} switchColour={switchColour} />
-        <ColourMatcher type="default" pattern={pattern} toChange={toChange} switchColour={switchColour} />
-      </div>
 
       <div className="flex w-[350px] borde min-h-[98px] items-end justify-between p-[2px]">
         <div className={`flex justify-between borde h-full flex-col ${allPlayers ? "" : "hidden"}`}>

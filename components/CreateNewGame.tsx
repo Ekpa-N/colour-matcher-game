@@ -18,7 +18,7 @@ export default function CreateGamePage() {
     const [gameState, setGameState] = useState<string>("")
     const [room, setRoom] = useState<string>("")
     const router = useRouter()
-    const pattern = ["red", "green", "blue", "yellow"]
+    const pattern = ["#20958E", "#AFD802", "#DF93D2", "#F7E270"]
     const [isCreated, setIsCreated] = useState<boolean>(false)
     const [loadError, setLoadError] = useState<boolean>(false)
 
