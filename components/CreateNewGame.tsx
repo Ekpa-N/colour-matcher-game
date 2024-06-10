@@ -178,7 +178,7 @@ export default function CreateGamePage() {
 
 
     return (
-        <main className="flex h-[450px] w-full border border-[#DF93D2] rounded flex-col gap-[5px] items-center justify-start p-2 font-poppins">
+        <main className="flex h-[450px] w-full md:w-[400px] border border-[#DF93D2] rounded flex-col gap-[5px] items-center justify-start p-2 font-poppins">
             <form onSubmit={createNewGame} className={`${gameState == "new" ? "flex" : "hidden"} flex-col p-2 borde rounded-[5px] border-[green]  w-[350px] items-start box-border`}>
                 <div className='relative w-[184px] h-[64px] self-center'>
                     <Image alt='logo' src="/images/colour-matcher-loader.svg" fill={true} />

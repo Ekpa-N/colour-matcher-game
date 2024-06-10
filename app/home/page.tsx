@@ -408,9 +408,10 @@ export default function PlayerHome() {
         <div className="flex gap-[5px] flex-col">
           {/* <button onClick={() => { reset() }} className={`border delet p-2 font-[600] active:bg-[#000080] active:text-[#fffff0] bg-[#fffff0] text-[#000080] rounded mt-[20px] ${isWon ? "" : hasWon ? "" : "hidden"}`}>Reset</button> */}
           <div className={`${isLoading ? "hidden" : ""}`}><Button sx={leaderBoardButton} className="h-[35px]" onClick={() => { handleInstructionsOpen() }}>Instructions</Button></div>
-          <button onClick={() => { play() }} className={`border ${isLoading ? "hidden" : ""} text-[#f6ebf4] active:bg-[#f6ebf4] active:text-[#338f1f] bg-[#338f1f] p-2 font-[600] rounded`}>Play Selection</button>
+          {/* <button onClick={() => { play() }} className={`border ${isLoading ? "hidden" : ""} text-[#f6ebf4] active:bg-[#f6ebf4] active:text-[#338f1f] bg-[#338f1f] p-2 font-[600] rounded`}>Play Selection</button> */}
         </div>
       </div>
+      <button onClick={() => { play() }} className={`border ${isLoading ? "hidden" : ""} border-black active:bg-[#f6ebf4] active:text-[#338f1f] w-[328px] active:text-[#fff] h-[44px] rounded-[50px] font-be font-[600]`}>Play Your Selection</button>
 
 
       <div className={`absolute border text-black w-full ${isLoading ? "" : "hidden"} flex items-center justify-center h-full`}>

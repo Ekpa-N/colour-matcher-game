@@ -34,8 +34,8 @@ const ColourMatcher: React.FC<ColourProps> = ({ pattern = [], toChange, switchCo
                 }
                 if (colour == "") {
                     return (
-                        <button onClick={() => { switchColour(idx, "play") }} key={idx} className={`w-[43px] border bg-[#fffff0] text-[#000080] h-[43px] rounded-[50%]`}>
-                            +
+                        <button onClick={() => { switchColour(idx, "play") }} key={idx} className={`w-[43px] border bg-[#fffff0] text-[11px] border-[#D4D8BE] text-[#D4D8BE] h-[43px] rounded-[50%]`}>
+                            {idx+1}
                         </button> //style={{backgroundColor: colour}}
                     )
                 }
