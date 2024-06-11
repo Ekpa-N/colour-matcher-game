@@ -179,10 +179,10 @@ export default function CreateGamePage() {
 
     return (
         <main className="flex h-[450px] w-full md:w-[400px] border border-[#DF93D2] rounded flex-col gap-[5px] items-center justify-start p-2 font-poppins">
+            <div className='relative w-[184px] h-[64px] self-center'>
+                <Image alt='logo' src="/images/colour-matcher-loader.svg" fill={true} />
+            </div>
             <form onSubmit={createNewGame} className={`${gameState == "new" ? "flex" : "hidden"} flex-col p-2 borde rounded-[5px] border-[green]  w-[350px] items-start box-border`}>
-                <div className='relative w-[184px] h-[64px] self-center'>
-                    <Image alt='logo' src="/images/colour-matcher-loader.svg" fill={true} />
-                </div>
                 {/* <label className="borde mt-[5px] w-full rounded px-[2px]" htmlFor="username">Nickname</label> */}
                 <input value={gameDetails.nickname} onChange={(e) => { handleInputChange(e) }} type="text" placeholder='Enter your nickname' className="w-[327px] h-[44px] rounded-[30px] text-center font-[be] border rounded px-[2px] mt-[28px]" name="nickname" />
                 {/* <label className="borde mt-[20px] w-full" htmlFor="password">How many players?</label>
@@ -194,10 +194,10 @@ export default function CreateGamePage() {
 
                 <div className="mt-[20px] borde flex flex-col w-full">
                     <div className="w-full flex justify-between">
-                        <button disabled={gameDetails.nickname == "" || isCreated || isLoading} type='submit' className={`px-2 border rounded relative w-[327px] h-[44px] rounded-[30px] text-center font-[be] justify-center text-[#fff] active:text-[#000] active:bg-[#FFF] items-center bg-[#000] ${isLoading || isCreated ? "hidden": "flex"}`}>
+                        <button disabled={gameDetails.nickname == "" || isCreated || isLoading} type='submit' className={`px-2 border rounded relative w-[327px] h-[44px] rounded-[30px] text-center font-[be] justify-center text-[#fff] active:text-[#000] active:bg-[#FFF] items-center bg-[#000] ${isLoading || isCreated ? "hidden" : "flex"}`}>
                             <h2 className={`${isLoading || isCreated ? "hidden" : ""}`}>Create Game</h2>
                         </button>
-                        <button disabled={true} className={`justify-center items-center ${isLoading ? "flex": "hidden"} w-[327px] h-[44px] rounded-[30px]`}>
+                        <button disabled={true} className={`justify-center items-center ${isLoading ? "flex" : "hidden"} w-[327px] h-[44px] rounded-[30px]`}>
                             <LoadingScreen type='button' />
                         </button>
                         <button type='submit' className={`px-2 border rounded relative w-[327px] h-[44px] rounded-[30px] text-center font-[be] justify-center text-[#fff] active:text-[#000] active:bg-[#FFF] items-center bg-[#20958E] ${!isCreated || isLoading ? "hidden" : ""}`}>Join Game</button>
@@ -208,20 +208,15 @@ export default function CreateGamePage() {
             <div className={`${gameState == "new" ? "flex" : "hidden"} justify-between w-[350px] borde mt-[5px] flex-col`}>
                 <button onClick={() => { copyToClipboard(shareLink) }} className={`px-2 border rounded relative w-[327px] h-[44px] rounded-[30px] text-center font-[be] justify-center text-[#fff] active:text-[#000] active:bg-[#FFF] items-center bg-[#AFD802]  ${!shareLink ? "hidden" : ""}`}>Copy share link</button>
             </div>
-            <form onSubmit={joinNewGame} className={`${gameState == "join" ? "flex" : "hidden"} flex-col p-2 border border-[green] w-[400px] items-start box-border`}>
-                <h2 className="self-center">Welcome to Colour Matcher</h2>
-                <label className="border w-full" htmlFor="username">Nickname</label>
-                <input value={gameDetails.nickname} onChange={(e) => { handleInputChange(e) }} type="text" placeholder='Enter your nickname' className="w-full border mt-[5px]" name="nickname" />
+            <form onSubmit={joinNewGame} className={`${gameState == "join" ? "flex" : "hidden"} flex-col p-2 borde border-[green] w-[400px] items-center box-border`}>
+                <input value={gameDetails.nickname} onChange={(e) => { handleInputChange(e) }} type="text" placeholder='Enter your nickname' className="w-[327px] h-[44px] rounded-[30px] text-center font-[be] border rounded px-[2px] mt-[28px]" name="nickname" />
 
-                <div className="mt-[20px] borde flex flex-col w-full">
-                    <div className="w-full flex justify-between">
-                        <button disabled={gameDetails.nickname == ""} type='submit' className="px-2 border rounded">
-                            <h2 className={`${isLoading ? "hidden" : ""}`}>Join Game</h2>
-                            <div className={`relative borde h-[25px] w-[30px] ${isLoading ? "" : "hidden"}`}>
-                                <Image alt='' src={"/images/loading-state.svg"} fill={true} />
-                            </div>
-                        </button>
-                    </div>
+                <div className="mt-[20px] borde flex ">
+                    <button disabled={true} className={`justify-center items-center ${isLoading ? "flex" : "hidden"} w-[327px] h-[44px] rounded-[30px]`}>
+                        <LoadingScreen type='button' />
+                    </button>
+                    <button type='submit' disabled={gameDetails.nickname == ""} className={`px-2 border rounded relative w-[327px] h-[44px] rounded-[30px] text-center font-[be] justify-center text-[#fff] active:text-[#000] active:bg-[#FFF] items-center bg-[#20958E] ${isLoading ? "hidden" : ""}`}>Join Game</button>
+                    
                 </div>
             </form>
 
