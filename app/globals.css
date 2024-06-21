@@ -157,7 +157,7 @@ svg circle {
 }
 
 .timer {
-  animation: countdown 59s linear infinite forwards;
+  animation: countdown 21s linear infinite forwards;
 }
 
 @keyframes countdown {
