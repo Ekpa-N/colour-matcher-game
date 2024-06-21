@@ -1,3 +1,5 @@
+import Image from "next/image";
+
 function generateRandomString(): string {
   const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@';
   let result = '';
@@ -119,5 +121,50 @@ function matchChecker(arr1: string[], arr2: string[]): number {
   return count
 }
 
+const iconButtons = [
+  {
+    src: "../icons/player-icon.svg",
+    alt: "View Players",
+    func: function (action: (arg?: any) => void): void {
+      action()
+    }
+  },
+  {
+    src: "../icons/player-icon.svg",
+    alt: "View Players",
+    func: function (action: (arg?: any) => void): void {
+      action()
+    }
+  },
+  {
+    src: "../icons/player-icon.svg",
+    alt: "View Players",
+    func: function (action: (arg?: any) => void): void {
+      action()
+    }
+  },
+  {
+    src: "../icons/player-icon.svg",
+    alt: "View Players",
+    func: function (action: (arg?: any) => void): void {
+      action()
+    }
+  },
+  {
+    src: "../icons/player-icon.svg",
+    alt: "View Players",
+    func: function (action: (arg?: any) => void): void {
+      action()
+    }
+  },
+]
 
-export { generateRandomString, copyToClipboard, shuffleArray, isIdentical, matchChecker, getInsult, removeSpaces }
+const modes: { name: string, key: string }[] = [
+  {
+    name: "Timed",
+    key: "timed"
+  }
+]
+
+
+export {modes, iconButtons, generateRandomString, copyToClipboard, shuffleArray, isIdentical, matchChecker, getInsult, removeSpaces }
