@@ -16,7 +16,17 @@ async function fetchDefaultPattern(playerInfo: string) {
     return newData
 }
 
-function useSubscription(playerInfo: { nickname: string, playerId: string, roomId: string, url: string }) {
+type useSubscriptionProps = {
+    playerInfo: {
+        nickname: string,
+        playerId: string,
+        roomId: string,
+        url: string
+    },
+    socket?: any
+}
+
+function useSubscription({ playerInfo, socket = "" }: useSubscriptionProps) {
     const [playerData, setPlayerData] = useState<any>({ nickname: "", playerId: "", url: "", roomId: "12345678" })
 
     useEffect(() => {
@@ -39,16 +49,34 @@ function useSubscription(playerInfo: { nickname: string, playerId: string, roomI
                             return { nickName: player.nickname, rounds: player.roundsWon }
                         })
                         let thisPlayerTurn = docSnapshot.data().players.findIndex((player: any) => player.id == playerData.playerId)
+                        const ownerLogged = docSnapshot.data().ownerLogged
+                        const owner = docSnapshot.data().owner
                         const currentTurn = docSnapshot.data().turn
+                        const nextTurn = Number(currentTurn) < docSnapshot.data().players.length - 1 ? Number(currentTurn) + 1 : 0
                         const isTurn = thisPlayerTurn.toString() == currentTurn
                         const isWon = isIdentical(thisPlayer.played, docSnapshot.data().default)
                         const hasWon = docSnapshot.data().players.find((player: any) => isIdentical(player.played, docSnapshot.data().default) == true)
                         const nextPlayer = docSnapshot.data().players[Number(currentTurn)].nickname
                         const currentRound = docSnapshot.data().round
-                        thisPlayer = { ...thisPlayer, isWon: isWon, isTurn: isTurn, isPlaying: `${nextPlayer} is playing`, hasWon: hasWon ? `${hasWon.nickname} has won this round!` : false, winningPattern: hasWon ? docSnapshot.data().default : false, ownership: allPlayers, leaderBoard:leaderBoard, currentRound: currentRound, isOwner: thisPlayer.isOwner ? true : false }
+                        const isTimed = docSnapshot.data().timed
+                        thisPlayer = {
+                            ...thisPlayer,
+                            isWon: isWon,
+                            isTurn: isTurn,
+                            isPlaying: `${nextPlayer} is playing`,
+                            hasWon: hasWon ? `${hasWon.nickname} has won this round!` : false, winningPattern: hasWon ? docSnapshot.data().default : false,
+                            ownership: allPlayers,
+                            leaderBoard: leaderBoard,
+                            currentRound: currentRound,
+                            isOwner: thisPlayer.isOwner ? true : false,
+                            ownerLogged: ownerLogged,
+                            owner: owner,
+                            nextTurn: nextTurn,
+                            isTimed: isTimed
+                        }
                         next(thisPlayer);
                     }
-                } else if(playerData.roomId != "12345678" && !docSnapshot.exists()) {
+                } else if (playerData.roomId != "12345678" && !docSnapshot.exists()) {
                     next("removed")
                     // debugger
                     // console.log("it got here")

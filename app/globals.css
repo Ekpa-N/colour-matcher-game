@@ -20,14 +20,13 @@
   font-family: 'poppins';
   src: url("../public/fonts/Poppins-Regular.ttf");
 }
+
 @font-face {
   font-family: 'be';
   src: url("../public/fonts/BeVietnamPro-Regular.ttf");
 }
 
-* {
-  
-}
+* {}
 
 body {
   /* color: rgb(var(--foreground-rgb)); */
@@ -37,8 +36,8 @@ body {
       rgb(var(--background-end-rgb))
     )
     rgb(var(--background-start-rgb)); */
-    /* background: #181028; */
-    /* height: 100%;
+  /* background: #181028; */
+  /* height: 100%;
     width: 100%; */
 }
 
@@ -65,7 +64,7 @@ input {
 }
 
 /* Conic gradient */
-.fancy::before { 
+.fancy::before {
   content: '';
   background: conic-gradient(transparent 270deg, rgb(186, 32, 194), transparent);
   position: absolute;
@@ -96,23 +95,23 @@ input {
   inset: 0;
   z-index: 10;
   /* border: 2px solid yellow; */
-  height:fit-content;
+  height: fit-content;
 }
 
 @keyframes rotate {
   from {
-      transform: translate(-50%, -50%) scale(1.4) rotate(0turn);
+    transform: translate(-50%, -50%) scale(1.4) rotate(0turn);
   }
 
   to {
-      transform: translate(-50%, -50%) scale(1.4) rotate(1turn);
+    transform: translate(-50%, -50%) scale(1.4) rotate(1turn);
   }
 }
 
 
 .delete {
   background: #a4a21a;
-  color:#f6ebf4
+  color: #f6ebf4
 }
 
 .play-button {
@@ -121,4 +120,52 @@ input {
 
 .play-button:active {
   background-color: #fffff0;
+}
+
+/* countdown animation */
+#countdown {
+  position: absolute;
+  margin: auto;
+  /* margin-top: 100px; */
+  height: 44px;
+  width: 44px;
+  text-align: center;
+  /* border: 1px solid red; */
+  border-radius: 50%;
+  left: 0;
+  /* top: -3px; */
+}
+
+svg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 43px;
+  height: 43px;
+  transform: rotateY(-180deg) rotateZ(-90deg);
+  /* border: 1px solid blue; */
+  border-radius: 50%;
+}
+
+svg circle {
+  stroke-dasharray: 119.32px;
+  stroke-dashoffset: 0px;
+  stroke-linecap: round;
+  stroke-width: 2px;
+  stroke: black;
+  fill: none;  
+}
+
+.timer {
+  animation: countdown 59s linear infinite forwards;
+}
+
+@keyframes countdown {
+  from {
+    stroke-dashoffset: 0px;
+  }
+
+  to {
+    stroke-dashoffset: 119.32px;
+  }
 }

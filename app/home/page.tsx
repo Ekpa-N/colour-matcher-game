@@ -7,7 +7,7 @@ import { io } from 'socket.io-client';
 import { useRouter } from "next/navigation";
 import { db } from '@/firebase';
 import { useSubscription } from "@/hooks/customHooks";
-import { shuffleArray, matchChecker, copyToClipboard, isIdentical, getInsult } from "@/components/helpers";
+import { shuffleArray, matchChecker, copyToClipboard, isIdentical, getInsult, iconButtons } from "@/components/helpers";
 import { collection, addDoc, getDocs, limit, query, where, doc, updateDoc, setDoc, getDoc, startAt, startAfter, getCountFromServer, serverTimestamp, endBefore, onSnapshot, deleteDoc } from "firebase/firestore";
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
@@ -16,6 +16,7 @@ import Modal from '@mui/material/Modal';
 import { ClassNames } from "@emotion/react";
 import { List, ListItemText, Table, TableBody, TableCell, TableHead, TableRow } from "@mui/material";
 import LoadingScreen from "@/components/Loader";
+import axios from "axios";
 
 
 const style = {
@@ -28,7 +29,8 @@ const style = {
   boxShadow: 24,
   p: 4,
   display: "flex",
-  flexDirection: "column"
+  flexDirection: "column",
+  borderRadius: "20px"
 };
 const styleTwo = {
   position: 'absolute' as 'absolute',
@@ -42,8 +44,19 @@ const styleTwo = {
   p: 4,
   display: "flex",
   flexDirection: "column",
-  overflow: "auto"
+  overflow: "auto",
+  borderRadius: "20px"
 };
+
+const styleThree = {
+  fontSize: "30px"
+}
+
+const warnModal = {
+  width: "300px",
+  height: "200px",
+  border: "1px solid yellow"
+}
 
 const instructionList = {
   display: "flex",
@@ -127,22 +140,81 @@ export default function PlayerHome() {
   const [leaderboard, setLeaderboard] = useState<any[]>([])
   const [open, setOpen] = useState(false);
   const [instructions, setInstructions] = useState(false);
+  const [readHelp, setReadHelp] = useState<boolean>(true)
   const [insult, setInsult] = useState<string>("")
   const [currentRound, setCurrentRound] = useState<string>("")
   const [isOwner, setIsOwner] = useState<boolean>(false)
   const [showPlayers, setShowPlayers] = useState<boolean>(false)
-  
+  const [showModes, setShowModes] = useState<boolean>(false)
+  const [ownerLogged, setOwnerLogged] = useState<boolean>(false)
+  const [owner, setOwner] = useState<any>("")
+  const [timer, setTimer] = useState<any>("")
+  const [socket, setSocket] = useState<any>()
+  const [playerStatus, setPlayerStatus] = useState<string[]>([])
+  const [isTimedMode, setIsTimedMode] = useState<boolean>(false)
+
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
   const handleInstructionsOpen = () => setInstructions(true);
-  const handleInstructionsClose = () => setInstructions(false);
+  const handleInstructionsClose = () => {
+    localStorage.setItem("isReload", "true")
+    setInstructions(false)
+  };
+
+  const handleHelpClose = () => setReadHelp(false);
+  // const handleHelpOpen = () => setReadHelp(true);
   const playersRef = useRef<HTMLButtonElement>(null)
-  
+  const modesRef = useRef<HTMLButtonElement>(null)
+  const modes: { name: string, key: string, func: (mode: boolean) => Promise<void> }[] = [
+    {
+      name: "Timed",
+      key: "timed",
+      func: timedMode
+    }
+  ]
+
   function handleClickOutside(event: MouseEvent) {
     if (playersRef.current && !playersRef.current.contains(event.target as Node)) {
       setShowPlayers(false);
     }
+    if (modesRef.current && !modesRef.current.contains(event.target as Node)) {
+      setShowModes(false);
+    }
   };
+  useEffect(() => {
+    if (localData.playerId != "") {
+      const newSocket = io("https://colour-matcher-server-811abd218ab9.herokuapp.com", { // http://localhost:3004 https://colour-matcher-server.vercel.app/ https://colour-matcher-server-811abd218ab9.herokuapp.com/
+        // path: "/home",
+        query: {
+          nickname: localData.nickname,
+          room: localData.roomId,
+          playerID: localData.playerId
+        }
+      })
+
+      setSocket(newSocket)
+    }
+  }, [localData])
+
+  useEffect(() => {
+    const showStatus = setInterval(() => {
+      setPlayerStatus([])
+    }, 3000)
+    if (socket) {
+      socket.on("receive_message", (data: any) => {
+        setPlayerStatus(prevStatus => [...prevStatus, data])
+        console.log("message from socket: ", data)
+      })
+      socket.on("turn", (data: any) => {
+        console.log("Turn Status: ", data)
+      })
+    }
+    return () => clearInterval(showStatus)
+  }, [socket])
+
+  function changeTurn(turnStatus: boolean) {
+    socket.emit("start_game", { turn: turnStatus })
+  }
 
   async function checkExistingGameData(existingDetails: any) {
     let players: any[] = []
@@ -152,14 +224,33 @@ export default function PlayerHome() {
       players = docSnap.data().players
       const currentPlayer = players.find(player => player.id == existingDetails.playerId)
       if (currentPlayer) {
+        // const isReload = JSON.parse(localStorage.getItem("isReload") as string)
+        // if (!isReload) {
+        //   setInstructions(true)
+        // }
         setLocalData(existingDetails)
+        // const newSocket = io("http://localhost:3004", {
+        //   path: "/home",
+        //   query: {
+        //     nickname: existingDetails.nickname,
+        //     room: existingDetails.roomId
+        //   }
+        // })
+
+        // setSocket(newSocket)
         return
       }
       localStorage.removeItem("colourMatcherPlayerData")
+      if (socket) {
+        socket.disconnect()
+      }
       router.push("/")
       return
     }
     localStorage.removeItem("colourMatcherPlayerData")
+    if (socket) {
+      socket.disconnect()
+    }
     router.push("/")
     return
   }
@@ -168,8 +259,35 @@ export default function PlayerHome() {
     setEvict(e.target.value)
   }
 
+  useEffect(() => {
+    const yourTimer = setInterval(() => {
+      if (turn && timer) {
+        if (timer > 1) {
+          setTimer(timer - 1);
+          console.log(`Timer: 00:${String(timer - 1).padStart(2, '0')}`);
+        } else if (timer <= 1) {
+          setTimer(0);
+          clearInterval(yourTimer)
+          console.log(`Timer: 00:00`);
+          // Additional logic can be placed here when wait reaches 0
+        }
+      }
+    }, 1000);
+
+    return () => clearInterval(yourTimer);
+  }, [turn, timer]);
+
+
+
   async function endGame() {
     const dataRef = doc(db, "games", localData.roomId)
+    socket.emit("start_game", { turn: false })
+    const killRoomTimeout = setTimeout(() => {
+      socket.emit("end_game", { roomId: localData.roomId })
+      clearTimeout(killRoomTimeout)
+    }, 3000)
+    // socket.disconnect()
+    // debugger
     const gameDoc = await deleteDoc(dataRef)
   }
 
@@ -202,6 +320,19 @@ export default function PlayerHome() {
     }
   }
 
+  async function timedMode(mode: boolean) {
+    // debugger
+    const dataRef = doc(db, "games", localData.roomId)
+    const gameDoc = await getDoc(dataRef)
+    if (gameDoc.exists()) {
+      await updateDoc(dataRef, {
+        timed: mode
+      })
+    } else {
+      console.log("No such document!");
+    }
+  }
+
   async function exitGame() {
     const dataRef = doc(db, "games", localData.roomId)
     const gameDoc = await getDoc(dataRef)
@@ -215,17 +346,20 @@ export default function PlayerHome() {
           players: newPlayers,
           turn: currentTurn.toString()
         })
+        socket.disconnect()
       } else {
         await updateDoc(dataRef, {
           players: newPlayers
         })
+        socket.disconnect()
       }
     } else {
       console.log("No such document!");
     }
   }
 
-  const { data, error } = useSubscription(localData)
+  const { data, error } = useSubscription({ playerInfo: localData, socket: socket })
+
   useEffect(() => {
     async function validateState() {
       let existingDetails = localStorage.getItem("colourMatcherPlayerData") != null && localStorage.getItem("colourMatcherPlayerData") != undefined ? JSON.parse(localStorage.getItem("colourMatcherPlayerData") as string) : ""
@@ -239,21 +373,21 @@ export default function PlayerHome() {
   }, [])
 
   useEffect(() => {
-    if (showPlayers) {
+    if (showPlayers || showModes) {
       window.addEventListener('click', handleClickOutside);
     } else {
       window.removeEventListener('click', handleClickOutside);
     }
 
-    // Clean up event listener on component unmount
     return () => {
       window.removeEventListener('click', handleClickOutside);
     };
-  }, [showPlayers]);
+  }, [showPlayers, showModes]);
 
   useEffect(() => {
     if (error == "removed") {
-      localStorage.removeItem("colourMatcherPlayerData")
+      // localStorage.removeItem("colourMatcherPlayerData")
+      localStorage.clear()
       router.push("/")
     }
     if (error && error.hasOwnProperty("played")) {
@@ -264,6 +398,9 @@ export default function PlayerHome() {
       setIsPlaying(error.isPlaying)
       setHasWon(error.hasWon)
       setIsOwner(error.isOwner)
+      setOwner(error.owner)
+      setIsTimedMode(error.isTimed)
+      setOwnerLogged(error.ownerLogged)
       setLeaderboard(error.leaderBoard.sort((a: any, b: any) => Number(b.rounds) - Number(a.rounds)))
       // if (error.ownership) {
       // let allPlayersList = [{ nickName: "", id: "" }]
@@ -278,8 +415,14 @@ export default function PlayerHome() {
         if (!error.isWon && error.hasWon) {
           setInsult(getInsult(loserInsults))
         }
+        socket.emit("start_game", { turn: false })
         handleOpen()
       } else {
+        if (error.isTimed) {
+          socket.emit("start_game", { turn: error.nextTurn.toString(), roomId: localData.roomId })
+        } else {
+          socket.emit("start_game", { turn: false })
+        }
         setWinningPattern(error.played)
         handleClose()
       }
@@ -288,6 +431,7 @@ export default function PlayerHome() {
       }
     }
   }, [error])
+
 
 
 
@@ -319,6 +463,25 @@ export default function PlayerHome() {
         players: newPlayers,
         turn: newTurn.toString()
       })
+
+      //using a try/catch
+      // try {
+      //   debugger
+      //   const played = await axios.post(`${process.env.play}`, {
+      //     roomID: localData.roomId,
+      //     players: newPlayers,
+      //     turn: newTurn.toString()
+      //   }, {
+      //     headers: {
+      //       "Content-Type": "application/json"
+      //     }
+      //   })
+      // } catch (error) { console.log("error: ") }
+
+      // using a socket
+      // socket.emit("start_game", { turn: newTurn.toString(), roomId:localData.roomId, players: newPlayers })   
+
+
       const template = gameDoc.data().default
       const currentMatchCount = matchChecker(currentPattern, template)
       setMatchCount(currentMatchCount)
@@ -329,6 +492,46 @@ export default function PlayerHome() {
       console.log("No such document!");
     }
   }
+
+  // original play function
+  // async function play() {
+  //   if (!turn || isWon) {
+  //     return
+  //   }
+  //   const dataRef = doc(db, "games", localData.roomId)
+  //   const gameDoc = await getDoc(dataRef)
+  //   if (gameDoc.exists()) {
+  //     const defaultPattern = gameDoc.data().default
+  //     const thePlayers = gameDoc.data().players
+  //     const currentTurn = Number(gameDoc.data().turn)
+  //     const newTurn = currentTurn < thePlayers.length - 1 ? currentTurn + 1 : 0
+  //     const thisPlayer = gameDoc.data().players.find((player: any) => player.id == localData.playerId)
+  //     const thisPlayerIndex = gameDoc.data().players.findIndex((player: any) => player.id == localData.playerId)
+  //     thisPlayer.played = currentPattern
+  //     const matched = isIdentical(currentPattern, defaultPattern)
+  //     if (matched) {
+  //       thisPlayer.roundsWon = (Number(thisPlayer.roundsWon) + 1).toString()
+  //     }
+  //     const newPlayers = thePlayers.map((player: any) => {
+  //       if (player.id == localData.playerId) {
+  //         return thisPlayer
+  //       }
+  //       return player
+  //     })
+  //     await updateDoc(dataRef, {
+  //       players: newPlayers,
+  //       turn: newTurn.toString()
+  //     })
+  //     const template = gameDoc.data().default
+  //     const currentMatchCount = matchChecker(currentPattern, template)
+  //     setMatchCount(currentMatchCount)
+  //     // console.log("The match count is: ", matchCount)
+  //     setCurrentPattern(["", "", "", ""])
+  //     console.log("changed")
+  //   } else {
+  //     console.log("No such document!");
+  //   }
+  // }
 
   async function reset(action?: string) {
     setMatchCount(0)
@@ -349,9 +552,12 @@ export default function PlayerHome() {
         }
         return player
       })
+      // const turn = Math.floor(Math.random() * thePlayers.length)
+      // console.log("new turn: ", turn)
+      // debugger
       await updateDoc(dataRef, {
         players: playsReset,
-        turn: "0",
+        turn: Math.floor(Math.random() * thePlayers.length).toString(),
         default: newDefault,
         round: action == "reset" ? "0" : nextRound.toString()
       })
@@ -379,6 +585,7 @@ export default function PlayerHome() {
     )
   }
 
+
   return (
     <main className="flex relative flex-col gap-[10px] border  h-[700px] items-center justify-start pt-[20px] px-[2px]">
       <div className="absolute border right-[1px]">
@@ -392,12 +599,13 @@ export default function PlayerHome() {
       </div>
 
 
-      <div className="flex flex-col border border-black rounded-[7px] w-[90%] md:w-[400px] pb-[27px] items-center justify-start pt-[17px] px-[2px]">
-        <div className="flex gap-[5px]">
+      <div className="flex relative flex-col border border-black rounded-[7px] w-[90%] md:w-[400px] pb-[27px] items-center justify-start pt-[17px] px-[2px]">
+        <div className="flex gap-[11px] relative items-center">
           <div className={`${isLoading ? "hidden" : ""} border border-black rounded-[10px] font-[700] flex justify-center items-center text-center font-be text-[8px] h-[13px] px-[4px] min-w-[70px]`}>
-            {`${isWon ? "You have won this round!" : hasWon ? hasWon : turn ? "Your turn" : isPlaying}`}
+            {`${ownerLogged ? (isWon ? "You have won this round!" : hasWon ? hasWon : turn ? "Your turn" : isPlaying) : `waiting for "our majesty", ${owner}, to majestically login`}`}
           </div>
-          <div className={` ${isLoading ? "hidden" : "border border-black rounded-[10px] font-[700] flex justify-center items-center text-center font-be text-[8px] h-[13px] w-[70px]"}`}>You matched {matchCount}</div>
+          <div className={` ${isLoading ? "hidden" : "border border-black rounded-[10px] font-[700] flex justify-center items-center text-center font-be text-[7px] h-[13px] w-[90px]"}`}>You matched {matchCount}</div>
+
         </div>
         <div className={`borde ${isLoading ? "hidden" : ""} text-center mt-[5px] h-[24px] w-[107px] ${isWon || hasWon ? "fanc" : ""}  ${winningPattern ? "" : ""}`}>
           <ColourMatcher type="win" pattern={winningPattern} toChange={toChange} switchColour={switchColour} />
@@ -412,28 +620,14 @@ export default function PlayerHome() {
       </div>
 
 
-      <div className="flex w-[350px] borde min-h-[98px] items-end justify-between p-[2px]">
-        {/* <div className={`flex justify-between borde h-full flex-col ${allPlayers ? "" : "hidden"}`}>
-          
-          <div className="flex flex-col min-h-[80px] borde gap-[5px]">
-            <h2 className="text-[green]">Players List</h2>
-            <select onChange={(e) => { handleSelectEvict(e) }} name='kickout' className='border w-[125px] rounded-[10px] h-[35px] outline-none'>
-              {allPlayers && allPlayers.map((player: any, idx: number) => {
-                return <option key={idx} className="border p-2" value={player.id}>{player.nickName}</option>
-              })}
-            </select>
-            <button onClick={() => { evictPlayer() }} className="p-2 rounded border rounded-[10px] text-[#fffff0] active:text-[#fffff0] active:bg-[red] bg-[#1f606d]">Kickout Player</button>
-          </div>
-        </div> */}
-        {/* <button onClick={() => { exitGame() }} className={`border ${isLoading || allPlayers ? "hidden" : ""} p-2 rounded text-[#fffff0] active:text-[#fffff0] active:bg-[red] bg-[#1f606d]`}>Leave Game</button> */}
-        <div className="flex gap-[5px] flex-col">
-          {/* <button onClick={() => { reset() }} className={`border delet p-2 font-[600] active:bg-[#000080] active:text-[#fffff0] bg-[#fffff0] text-[#000080] rounded mt-[20px] ${isWon ? "" : hasWon ? "" : "hidden"}`}>Reset</button> */}
-          {/* <div className={`${isLoading ? "hidden" : ""}`}><Button sx={leaderBoardButton} className="h-[35px]" onClick={() => { handleInstructionsOpen() }}>Instructions</Button></div> */}
-          {/* <button onClick={() => { play() }} className={`border ${isLoading ? "hidden" : ""} text-[#f6ebf4] active:bg-[#f6ebf4] active:text-[#338f1f] bg-[#338f1f] p-2 font-[600] rounded`}>Play Selection</button> */}
-        </div>
-      </div>
+
       <button onClick={() => { play() }} className={`border ${isLoading ? "hidden" : ""} border-black active:bg-[#f6ebf4] active:text-[#338f1f] w-[328px] active:text-[#fff] h-[44px] rounded-[50px] font-be font-[600]`}>Play Your Selection</button>
-      <div className="borde justify-end flex w-[328px]">
+      <div className="borde justify-end flex w-[328px] relative">
+        <div id="countdown">
+          <svg>
+            <circle className={`${timer}`} r="19" cx="21" cy="21"></circle>
+          </svg>
+        </div>
         <button onClick={() => { exitGame() }} className={`border ${isOwner ? "hidden" : ""} border-black active:bg-[#f6ebf4] active:text-[#338f1f] w-[156px] active:text-[#fff] h-[44px] rounded-[50px] font-be font-[600]`}>Leave Game</button>
         <button onClick={() => { endGame() }} className={`border ${!isOwner ? "hidden" : ""} border-black active:bg-[#f6ebf4] active:text-[#338f1f] w-[156px] active:text-[#fff] h-[44px] rounded-[50px] font-be font-[600]`}>End Game</button>
       </div>
@@ -457,7 +651,19 @@ export default function PlayerHome() {
             )
           })}
         </div>
-        <button ref={playersRef} onClick={()=>{setShowPlayers(!showPlayers)}} className="relative w-[35px] h-[35px]">
+        <div className={`${showModes ? "" : "hidden"} absolute border border-[red] w-[100px] text-[12px] left-[180px] bottom-[45px] bg-[#F5F5F5] p-[10px] rounded-[10px]`}>
+          {modes.map((mode: any, idx: number) => {
+            return (
+              <div key={idx} className="flex items-center gap-[5px]">
+                <button onClick={() => { mode.func(!isTimedMode) }} className={`w-[13px] h-[13px] cursor-pointer  rounded-[50%] ${isTimedMode ? "bg-[#F86464]" : "bg-[lightgreen]"} ${isOwner ? "flex" : "hidden"} justify-center items-center`}>
+                  <div className="bg-white h-[2px] w-[8px] rounded-[2px]"></div>
+                </button>
+                <h2>{mode.name}</h2>
+              </div>
+            )
+          })}
+        </div>
+        <button ref={playersRef} onClick={() => { setShowPlayers(!showPlayers) }} className="relative w-[35px] h-[35px]">
           <Image alt="Players" fill={true} src="../icons/player-icon.svg" />
         </button>
         <button onClick={() => { handleOpen() }} className="relative w-[35px] h-[35px]">
@@ -466,21 +672,12 @@ export default function PlayerHome() {
         <button onClick={() => { handleInstructionsOpen() }} className="relative w-[35px] h-[35px]">
           <Image alt="Players" fill={true} src="../icons/help.svg" />
         </button>
-        <button className="relative w-[35px] h-[35px]">
+        <button ref={modesRef} onClick={() => { setShowModes(!showModes) }} className="relative w-[35px] cursor-pointer h-[35px]">
           <Image alt="Players" fill={true} src="../icons/modes.svg" />
         </button>
-        <button onClick={() => { copyToClipboard(localData.url) }} className={` ${allPlayers ? "relative w-[35px] h-[35px]" : "hidden"}`}>
-          <Image alt="Players" fill={true} src="../icons/copy-link.svg" />
+        <button onClick={() => { copyToClipboard(localData.url) }} className={` ${allPlayers ? "relative w-[35px] h-[35px]" : "hidden"} cursor-pointer`}>
+          <Image className="cursor-pointer" alt="Players" fill={true} src="../icons/copy-link.svg" />
         </button>
-      </div>
-      <div className={` borde justify-between flex absolute bottom-[10px] w-[350px] gap-[5px] borde`}>
-        <div className={`${isLoading ? "hidden" : ""}`}>
-          {/* <Button sx={leaderBoardButton} className="h-[35px]" onClick={() => { handleOpen() }}>Leaderboard</Button> */}
-        </div>
-        {/* <div className={`${allPlayers ? "flex" : "hidden"}`}>
-          <button onClick={() => { copyToClipboard(localData.url) }} className='border  box-border font-[500] active:bg-[white] active:text-[green] flex justify-center items-center text-[15px] w-[85px] h-[35px]  bg-[green] text-[white] rounded-[5px]'> Copy Link </button>
-          <button onClick={() => { endGame() }} className={`border ${isLoading || !allPlayers ? "hidden" : "text-[#fffff0] active:text-[red] active:bg-[#fffff0] bg-[red]"} px-[3px] rounded`}>End Game</button>
-        </div> */}
       </div>
       <Modal
         open={open}
@@ -543,6 +740,15 @@ export default function PlayerHome() {
           </List>
         </Box>
       </Modal>
+      <div className="flex flex-col gap-[3px]">
+        {playerStatus.map((status: string) => {
+          return (
+            <div className={`flex min-w-[50px] border min-h-[20px] rounded-[10px] items-center justify-center bg-[#F5F5F5] px-[5px]`}>
+              {status}
+            </div>
+          )
+        })}
+      </div>
     </main>
   )
 }

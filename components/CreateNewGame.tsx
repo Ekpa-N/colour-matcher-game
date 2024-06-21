@@ -7,9 +7,37 @@ import { v4 as uuidv4 } from "uuid"
 import Image from 'next/image';
 import { db } from '@/firebase';
 import LoadingScreen from './Loader';
-import { doc, getDoc } from "firebase/firestore";
+import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
+import Typography from '@mui/material/Typography';
+import Modal from '@mui/material/Modal';
+import { collection, addDoc, getDocs, limit, query, where, doc, updateDoc, setDoc, getDoc, startAt, startAfter, getCountFromServer, serverTimestamp, endBefore, onSnapshot, deleteDoc } from "firebase/firestore";
+import { List, ListItemText } from '@mui/material';
+import { io } from 'socket.io-client';
 
+const styleTwo = {
+    position: 'absolute' as 'absolute',
+    top: '40%',
+    left: '50%',
+    transform: 'translate(-50%, -50%)',
+    width: 350,
+    height: 500,
+    bgcolor: '#fffff0',
+    boxShadow: 24,
+    p: 4,
+    display: "flex",
+    flexDirection: "column",
+    overflow: "auto",
+    borderRadius: "20px"
+  };
 
+  const instructionList = {
+    display: "flex",
+    flexDirection: "column",
+    gap: "10px",
+    borderRadius: "10px"
+  }
+  
 export default function CreateGamePage() {
     const searchParams = useSearchParams()
     const [gameDetails, setGameDetails] = useState<{ nickname: string, players: string }>({ nickname: "", players: "2" })
@@ -21,6 +49,15 @@ export default function CreateGamePage() {
     const pattern = ["#20958E", "#AFD802", "#DF93D2", "#F7E270"]
     const [isCreated, setIsCreated] = useState<boolean>(false)
     const [loadError, setLoadError] = useState<boolean>(false)
+    const [instructions, setInstructions] = useState(false);
+
+
+    const handleInstructionsOpen = () => setInstructions(true);
+    const handleInstructionsClose = () => {
+        setInstructions(false)
+    };
+
+
 
 
 
@@ -89,6 +126,11 @@ export default function CreateGamePage() {
         setIsLoading(true)
         setLoadError(false)
         if (isCreated) {
+            const room = JSON.parse(localStorage.getItem("colourMatcherPlayerData") as string).roomId
+            const dataRef = doc(db, "games", room)
+            await updateDoc(dataRef, {
+                ownerLogged: true
+            })
             router.push(`/home`)
             return
         }
@@ -112,6 +154,7 @@ export default function CreateGamePage() {
             if (newGame.status == 200) {
                 setShareLink(`https://colour-matcher-game.vercel.app?id=${roomId}`)
                 localStorage.setItem("colourMatcherPlayerData", JSON.stringify({ roomId: roomId, playerId: playerID, url: `https://colour-matcher-game.vercel.app?id=${roomId}`, nickname: gameDetails.nickname }))
+                localStorage.setItem("isReload", "false")
                 setIsCreated(true)
                 setIsLoading(false)
             }
@@ -156,6 +199,7 @@ export default function CreateGamePage() {
             if (newGame.status === 200) {
                 setIsLoading(false)
                 localStorage.setItem("colourMatcherPlayerData", JSON.stringify({ roomId: room, playerId: playerID, url: `https://colour-matcher-game.vercel.app?id=${room}`, nickname: gameDetails.nickname }))
+                localStorage.setItem("isReload", "false")
                 router.push(`/home`)
                 // console.log(newGame.data.message);
             }
@@ -178,7 +222,7 @@ export default function CreateGamePage() {
 
 
     return (
-        <main className="flex h-[450px] w-full md:w-[400px] border border-[#DF93D2] rounded flex-col gap-[5px] items-center justify-start p-2 font-poppins">
+        <main className="flex h-[450px] w-full md:w-[400px] border border-[#DF93D2] rounded flex-col gap-[5px] items-center justify-start p-2 font-poppins relative">
             <div className='relative w-[184px] h-[64px] self-center'>
                 <Image alt='logo' src="/images/colour-matcher-loader.svg" fill={true} />
             </div>
@@ -216,9 +260,35 @@ export default function CreateGamePage() {
                         <LoadingScreen type='button' />
                     </button>
                     <button type='submit' disabled={gameDetails.nickname == ""} className={`px-2 border rounded relative w-[327px] h-[44px] rounded-[30px] text-center font-[be] justify-center text-[#fff] active:text-[#000] active:bg-[#FFF] items-center bg-[#20958E] ${isLoading ? "hidden" : ""}`}>Join Game</button>
-                    
                 </div>
             </form>
+
+            <button onClick={() => { handleInstructionsOpen() }} className={`border rounded w-[328px] h-[44px] rounded-[30px] absolute bottom-2 text-center font-[be] font-[700] justify-center text-[#fff] active:text-[#000] active:bg-[#FFF] items-center bg-[#000] `}>How to play</button>
+
+            <Modal
+                open={instructions}
+                onClose={handleInstructionsClose}
+                aria-labelledby="modal-modal-title"
+                aria-describedby="modal-modal-description"
+            >
+                <Box sx={styleTwo}>
+                    <Typography variant="h4" component="h2">
+                        How to play.
+                    </Typography>
+                    <List sx={instructionList}>
+                        <ListItemText primary="Tap/click any coloured circle to highlight it and select that colour." />
+                        <ListItemText primary="Next, tap/click any of the four circles with a plus sign to apply your selected colour." />
+                        <ListItemText primary="Repeat steps 1 and 2 above as many times as you like to create a pattern with all four colours." />
+                        <ListItemText primary={`Click/tap the "Play Selection" button to play your pattern and wait for your opponent.`} />
+                        <ListItemText primary={`The turn notification bar at the top left displays whose turn it is.`} />
+                        <ListItemText primary={`The hint bar at the top right displays how many correct colour matches you played on your last turn.`} />
+                        <ListItemText primary={`A round ends when someone plays a pattern that matches the game's secret pattern.`} />
+                        <ListItemText primary={`The leaderboard displays a record of players' scores starting with the hightest.`} />
+                        <ListItemText primary={`Click/tap the "Next Round" button to keep the scores and restart the game with a new pattern.`} />
+                        <ListItemText primary={`Click/tap the "Reset" button to erase the scores and restart the game with a new pattern.`} />
+                    </List>
+                </Box>
+            </Modal>
 
         </main>
     )
