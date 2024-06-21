@@ -594,17 +594,17 @@ export default function PlayerHome() {
         <Image alt='logo' src="/images/colour-matcher-loader.svg" fill={true} />
       </div>
 
-      <div className="w-[67px] flex justify-center text-[11px] pb-[15px] h-[13px] rounded-[7px] bg-[black] text-[white] font-be">
-        Round {currentRound}
+      <div className="w-fit px-[10px] flex justify-center items-center text-[11px] h-[20px] rounded-[10px] bg-[black] text-[white] font-be">
+        <h2>Round {currentRound}</h2>
       </div>
 
 
       <div className="flex relative flex-col border border-black rounded-[7px] w-[90%] md:w-[400px] pb-[27px] items-center justify-start pt-[17px] px-[2px]">
         <div className="flex gap-[11px] relative items-center">
-          <div className={`${isLoading ? "hidden" : ""} border border-black rounded-[10px] font-[700] flex justify-center items-center text-center font-be text-[8px] h-[13px] px-[4px] min-w-[70px]`}>
-            {`${ownerLogged ? (isWon ? "You have won this round!" : hasWon ? hasWon : turn ? "Your turn" : isPlaying) : `waiting for "our majesty", ${owner}, to majestically login`}`}
+          <div className={`${isLoading ? "hidden" : ""} border border-black rounded-[10px] font-[700] flex justify-center items-center text-center font-be text-[8px] h-[20px] px-[6px] w-fit`}>
+            {`${ownerLogged ? (isWon ? "You have won this round!" : hasWon ? hasWon : turn ? "Your turn" : isPlaying) : `waiting for "our majesty", ${owner}, to majestically join`}`}
           </div>
-          <div className={` ${isLoading ? "hidden" : "border border-black rounded-[10px] font-[700] flex justify-center items-center text-center font-be text-[7px] h-[13px] w-[90px]"}`}>You matched {matchCount}</div>
+          <div className={` ${isLoading ? "hidden" : "border border-black rounded-[10px] font-[700] flex justify-center items-center text-center font-be text-[7px] px-[6px] h-[20px] w-fit"}`}>You matched {matchCount}</div>
 
         </div>
         <div className={`borde ${isLoading ? "hidden" : ""} text-center mt-[5px] h-[24px] w-[107px] ${isWon || hasWon ? "fanc" : ""}  ${winningPattern ? "" : ""}`}>
