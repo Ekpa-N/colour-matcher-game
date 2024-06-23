@@ -25,27 +25,159 @@ const db = new firestore()
 //   response.send("Hello from Firebase!");
 // });
 
+
+function findTemplate(arrangements) {
+    const permutations = getPermutations(["#20958E", "#AFD802", "#DF93D2", "#F7E270"]);
+
+    for (let permutation of permutations) {
+        if (arrangements.every(arr => countMatches(arr.arrangement, permutation) === arr.matches)) {
+            return permutation;
+        }
+    }
+
+    return null;
+}
+
+function getPermutations(array) {
+    if (array.length === 0) return [[]];
+
+    const firstElem = array[0];
+    const rest = array.slice(1);
+
+    const permutationsWithoutFirst = getPermutations(rest);
+    const allPermutations = [];
+
+    permutationsWithoutFirst.forEach((permutation) => {
+        for (let i = 0; i <= permutation.length; i++) {
+            const permutationWithFirst = [...permutation.slice(0, i), firstElem, ...permutation.slice(i)];
+            allPermutations.push(permutationWithFirst);
+        }
+    })
+
+    return allPermutations;
+}
+
+function countMatches(arr1, arr2) {
+    let matches = 0;
+    for (let i = 0; i < arr1.length; i++) {
+        if (arr1[i] === arr2[i]) {
+            matches += 1;
+        }
+    }
+    return matches;
+}
+
+function isIdentical(arr1, arr2) {
+    // Check if the arrays have the same length
+    // if (arr1.length !== arr2.length) {
+    //     return false;
+    // }
+
+    // Compare each element in the arrays
+    for (let i = 0; i < arr1.length; i++) {
+        if (arr1[i] !== arr2[i]) {
+            return false;
+        }
+    }
+
+    // If all elements are identical, return true
+    return true;
+}
+
+function matchChecker(arr1, arr2) {
+    let count = 0
+    arr1.forEach((colour, idx) => {
+        if (colour == arr2[idx]) {
+            count = count + 1
+        }
+    })
+    return count
+}
+
+function shuffleArray(arr) {
+    let shuffledArray = arr.slice(); // Create a copy of the array to avoid mutating the original
+    for (let i = shuffledArray.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1)); // Random index from 0 to i
+        [shuffledArray[i], shuffledArray[j]] = [shuffledArray[j], shuffledArray[i]]; // Swap elements
+    }
+    return shuffledArray;
+}
+
+// exported functions
+
 exports.createGame = onRequest({ maxInstances: 10, cors: true, invoker: "public" }, async (request, response) => {
-    const { document, defaultPattern, player, isNew } = request.body
+    const { document, defaultPattern, player, isNew, isCpu } = request.body
     let gameCreated
     const docRef = db.collection('games').doc(document)
-    if(isNew) {
-        let thisPlayer = {...player[0], isOwner: true}
-        gameCreated = await docRef.set({ default: defaultPattern, players: [thisPlayer], turn: "0", round: "1", ownerLogged: false, owner: player[0].nickname, timed: false })
+    if (isNew) {
+        let thisPlayer = { ...player[0], isOwner: true }
+        gameCreated = await docRef.set({ default: defaultPattern, players: [thisPlayer], turn: "0", round: "1", ownerLogged: false, owner: player[0].nickname, timed: false, cpu: false })
     }
-    if(!isNew) {
-        let thisPlayer = {...player, isOwner: false}
-        gameCreated = await docRef.update({ players: FieldValue.arrayUnion(thisPlayer)})
+    if (!isNew) {
+        let thisPlayer = { ...player, isOwner: false }
+        let currentGame = await docRef.get()
+        let newPlayers = currentGame.data().players.filter(player => player.id != "match-n-botter")
+        newPlayers.push(thisPlayer)
+        if (isCpu) {
+            gameCreated = await docRef.update({ players: FieldValue.arrayUnion(thisPlayer), cpu: true, timed: false })
+        } else {
+            gameCreated = await docRef.update({ players: newPlayers, cpu: false })
+        }
     }
     response.send(gameCreated)
 })
 
-exports.playerStatus = onRequest({ maxInstances: 10, cors: true, invoker: "public" }, async (request, response) => {
-    const { roomID, players, turn } = request.body
-    let gameCreated
+exports.playerStatus = onRequest({ maxInstances: 10, cors: true, invoker: "public", timeoutSeconds: 180, memory: "1GiB" }, async (request, response) => {
+    const { roomID, action } = request.body
     const docRef = db.collection('games').doc(roomID)
-    gameCreated = await docRef.update({ players: players, turn: turn })
-    response.send(gameCreated)
+    if (action == "delete") {
+        let currentGame = await docRef.get()
+        let newPlayers = currentGame.data().players.filter(player => player.id != "match-n-botter")
+        let botGone = await docRef.update({ players: newPlayers })
+        response.send(botGone)
+    } else if (action == "play") {
+        let currentGame = await docRef.get()
+        const bot = currentGame.data().players.find(player => player.id == "match-n-botter")
+        if (bot.pattern.length == 0) {
+            let thisPlay = shuffleArray(["#20958E", "#AFD802", "#DF93D2", "#F7E270"])
+            const matches = matchChecker(thisPlay, currentGame.data().default)
+            const isMatched = isIdentical(thisPlay, currentGame.data().default)
+            bot.played = thisPlay
+            bot.pattern = [...bot.pattern, { arrangement: thisPlay, matches: matches }]
+            if (isMatched) {
+                bot.roundsWon = (Number(bot.roundsWon) + 1).toString()
+            }
+            const newPlayers = currentGame.data().players.map((player) => {
+                if (player.id == bot.id) {
+                    return bot
+                }
+                return player
+            })
+            const played = await docRef.update({ players: newPlayers, turn: "0" })
+            response.send(played)
+        } else if (bot.pattern.length != 0) {
+            let thisPlay = findTemplate(bot.pattern)
+            // const hasWon = isIdentical(bot.played, currentGame.data().default)
+            // if(hasWon) {
+            //     return
+            // }
+            const isMatched = isIdentical(thisPlay, currentGame.data().default)
+            const matches = matchChecker(thisPlay, currentGame.data().default)
+            bot.played = thisPlay
+            bot.pattern = [...bot.pattern, { arrangement: thisPlay, matches: matches }]
+            if (isMatched) {
+                bot.roundsWon = (Number(bot.roundsWon) + 1).toString()
+            }
+            const newPlayers = currentGame.data().players.map((player) => {
+                if (player.id == bot.id) {
+                    return bot
+                }
+                return player
+            })
+            const played = await docRef.update({ players: newPlayers, turn: "0" })
+            response.send(played)
+        }
+    }
 })
 
 exports.updateTurn = onRequest({ maxInstances: 10, cors: true, invoker: "public" }, async (request, response) => {

@@ -143,7 +143,8 @@ export default function CreateGamePage() {
             document: roomId,
             defaultPattern: defaultShuffle,
             player: [{ id: playerID, pattern: shuffledPattern, nickname: gameDetails.nickname, played: ["", "", "", ""], roundsWon: "0" }],
-            isNew: true
+            isNew: true,
+            isCpu: false
         }
         try {
             const newGame = await axios.post(`${process.env.newGame}`, newGameData, {
@@ -188,7 +189,8 @@ export default function CreateGamePage() {
             document: room,
             defaultPattern: [],
             player: { id: playerID, pattern: shuffledPattern, nickname: gameDetails.nickname, played: ["", "", "", ""], roundsWon: "0" },
-            isNew: false
+            isNew: false,
+            isCpu: false
         }
         try {
             const newGame = await axios.post(`${process.env.newGame}`, newGameData, {

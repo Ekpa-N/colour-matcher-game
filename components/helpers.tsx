@@ -26,6 +26,7 @@ function copyToClipboard(text: string) {
   }, function (err) {
     console.error('Could not copy text: ', err);
   });
+  
 }
 
 function fallbackCopyToClipboard(text: string) {
@@ -167,4 +168,56 @@ const modes: { name: string, key: string }[] = [
 ]
 
 
-export {modes, iconButtons, generateRandomString, copyToClipboard, shuffleArray, isIdentical, matchChecker, getInsult, removeSpaces }
+
+function findTemplate(arrangements: {arrangement: string[], matches: number | string}[]) {
+  const permutations = getPermutations(["red", "blue", "green", "yellow"]);
+
+  for (let permutation of permutations) {
+    if (arrangements.every((arr: any) => countMatches(arr.arrangement, permutation) === arr.matches)) {
+      return permutation;
+    }
+  }
+
+  return null;
+}
+
+function getPermutations(array: any[]): any {
+  if (array.length === 0) return [[]];
+
+  const firstElem = array[0];
+  const rest = array.slice(1);
+
+  const permutationsWithoutFirst = getPermutations(rest);
+  const allPermutations: any[] = [];
+
+  permutationsWithoutFirst.forEach((permutation: any) => {
+    for (let i = 0; i <= permutation.length; i++) {
+      const permutationWithFirst = [...permutation.slice(0, i), firstElem, ...permutation.slice(i)];
+      allPermutations.push(permutationWithFirst);
+    }
+  })
+
+  return allPermutations;
+}
+
+function countMatches(arr1: any[], arr2: any[]): any {
+  let matches = 0;
+  for (let i = 0; i < arr1.length; i++) {
+    if (arr1[i] === arr2[i]) {
+      matches += 1;
+    }
+  }
+  return matches;
+}
+
+// Example usage
+// const arrangements = [
+//   { arrangement: ["red", "blue", "green", "yellow"], matches: 2 },
+//   { arrangement: ["blue", "red", "yellow", "green"], matches: 1 }
+// ];
+
+// console.log(findTemplate(arrangements));  // It should return a possible accurate match array
+
+
+
+export { findTemplate, modes, iconButtons, generateRandomString, copyToClipboard, shuffleArray, isIdentical, matchChecker, getInsult, removeSpaces }
