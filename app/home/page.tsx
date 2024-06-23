@@ -482,7 +482,7 @@ export default function PlayerHome() {
         if (Number(error.currentTurn) == 1 && error.isCpu && !error.hasWon) {
           // debugger
           // socket.emit("cpu_play")
-          axios.post("https://playerstatus-djhwq4ivna-uc.a.run.app", { roomID: playerData.roomId, action: "play" }, {
+          axios.post("https://playerstatus-djhwq4ivna-uc.a.run.app", { roomID: localData.roomId, action: "play" }, {
             headers: {
               "Content-Type": "application/json"
             }
