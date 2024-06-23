@@ -78,16 +78,36 @@ function useSubscription({ playerInfo, socket = "" }: useSubscriptionProps) {
                             isTimed: isTimed,
                             cpu: isCpu
                         }
-                        if (Number(currentTurn) == 1 && isCpu && !hasWon) {
-                            // debugger
-                            // socket.emit("cpu_play")
-                            const cpuPlay = await axios.post("https://playerstatus-djhwq4ivna-uc.a.run.app", { roomID: playerData.roomId, action: "play" }, {
-                                headers: {
-                                    "Content-Type": "application/json"
-                                }
-                            })
-                        }
+                        // if (Number(currentTurn) == 1 && isCpu && !hasWon) {
+                        //     // debugger
+                        //     // socket.emit("cpu_play")
+                        //     let attempts = 0
+                        //     while (attempts < 3) {
+                        //         try {
+                        //             const cpuPlay = await axios.post("https://playerstatus-djhwq4ivna-uc.a.run.app", { roomID: playerData.roomId, action: "play" }, {
+                        //                 headers: {
+                        //                     "Content-Type": "application/json"
+                        //                 }
+                        //             })
+                        //         } catch(error) {}                                
+                        //     }
+                        // }
                         next(thisPlayer);
+                        if (Number(currentTurn) == 1 && isCpu && !hasWon) {
+                            let attempts = 0;
+                            while (attempts < 3) {
+                                try {
+                                    const cpuPlay = await axios.post("https://playerstatus-djhwq4ivna-uc.a.run.app", { roomID: playerData.roomId, action: "play" }, {
+                                        headers: {
+                                            "Content-Type": "application/json"
+                                        }
+                                    });
+                                    break; // Exit the loop if the request is successful
+                                } catch (error) {
+                                    attempts++;
+                                }
+                            }
+                        }
                     }
                 } else if (playerData.roomId != "12345678" && !docSnapshot.exists()) {
                     next("removed")
