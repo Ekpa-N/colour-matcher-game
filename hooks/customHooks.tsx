@@ -4,6 +4,7 @@ import useSWRSubscription from 'swr/subscription'
 import { collection, addDoc, getDocs, limit, query, where, doc, updateDoc, setDoc, getDoc, startAt, startAfter, getCountFromServer, serverTimestamp, endBefore, onSnapshot } from "firebase/firestore";
 import { isIdentical } from "@/components/helpers";
 import axios from "axios";
+// import { delay } from "framer-motion";
 
 
 
@@ -15,6 +16,10 @@ async function fetchDefaultPattern(playerInfo: string) {
         newData = docSnapshot.data()
     }
     return newData
+}
+
+function holdPlay(ms: number) {
+    return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 type useSubscriptionProps = {
@@ -94,6 +99,7 @@ function useSubscription({ playerInfo, socket = "" }: useSubscriptionProps) {
                         // }
                         next(thisPlayer);
                         if (Number(currentTurn) == 1 && isCpu && !hasWon) {
+                            await holdPlay(5000)
                             let attempts = 0;
                             while (attempts < 3) {
                                 try {
