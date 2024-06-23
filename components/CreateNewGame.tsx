@@ -22,11 +22,11 @@ export default function CreateGamePage() {
     const pattern = ["#20958E", "#AFD802", "#DF93D2", "#F7E270"]
     const [isCreated, setIsCreated] = useState<boolean>(false)
     const [loadError, setLoadError] = useState<boolean>(false)
-    const [instructions, setInstructions] = useState(true);
+    const [instructions, setInstructions] = useState(false);
     const [instructionsPage, setInstructionsPage] = useState<number>(1)
 
-    
-    const handleInstructionsPage = (page:number) =>{
+
+    const handleInstructionsPage = (page: number) => {
         setInstructionsPage(page)
     }
     const handleInstructionsOpen = () => setInstructions(true);
@@ -63,6 +63,7 @@ export default function CreateGamePage() {
                 if (docSnap.exists()) {
                     setRoom(id)
                     setGameState("join")
+                    handleInstructionsOpen()
                     return
                 }
             }
@@ -135,6 +136,7 @@ export default function CreateGamePage() {
                 localStorage.setItem("isReload", "false")
                 setIsCreated(true)
                 setIsLoading(false)
+                handleInstructionsOpen()
             }
         } catch (error) {
             if (axios.isAxiosError(error)) {
