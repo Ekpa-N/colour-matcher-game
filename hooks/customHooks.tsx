@@ -59,12 +59,14 @@ function useSubscription({ playerInfo, socket = "" }: useSubscriptionProps) {
                         const nextPlayer = docSnapshot.data().players[Number(currentTurn)].nickname
                         const currentRound = docSnapshot.data().round
                         const isTimed = docSnapshot.data().timed
+                        const isCpu = docSnapshot.data().cpu
                         thisPlayer = {
                             ...thisPlayer,
                             isWon: isWon,
                             isTurn: isTurn,
                             isPlaying: `${nextPlayer} is playing`,
-                            hasWon: hasWon ? `${hasWon.nickname} has won this round!` : false, winningPattern: hasWon ? docSnapshot.data().default : false,
+                            hasWon: hasWon ? `${hasWon.nickname} has won this round!` : false, 
+                            winningPattern: hasWon ? docSnapshot.data().default : false,
                             ownership: allPlayers,
                             leaderBoard: leaderBoard,
                             currentRound: currentRound,
@@ -72,7 +74,12 @@ function useSubscription({ playerInfo, socket = "" }: useSubscriptionProps) {
                             ownerLogged: ownerLogged,
                             owner: owner,
                             nextTurn: nextTurn,
-                            isTimed: isTimed
+                            isTimed: isTimed,
+                            cpu: isCpu
+                        }
+                        if(Number(currentTurn) == 1 && isCpu && !hasWon){
+                            // debugger
+                            socket.emit("cpu_play")
                         }
                         next(thisPlayer);
                     }

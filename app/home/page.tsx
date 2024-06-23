@@ -17,6 +17,7 @@ import { ClassNames } from "@emotion/react";
 import { List, ListItemText, Table, TableBody, TableCell, TableHead, TableRow } from "@mui/material";
 import LoadingScreen from "@/components/Loader";
 import axios from "axios";
+import { RiRobot3Line, RiRobot2Line } from "react-icons/ri";
 
 
 const style = {
@@ -152,6 +153,8 @@ export default function PlayerHome() {
   const [socket, setSocket] = useState<any>()
   const [playerStatus, setPlayerStatus] = useState<string[]>([])
   const [isTimedMode, setIsTimedMode] = useState<boolean>(false)
+  const [isCpuActive, setIsCpuActive] = useState<boolean>(false)
+  const [urlCopied, setUrlCopied] = useState<boolean>(false)
 
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
@@ -183,7 +186,7 @@ export default function PlayerHome() {
   };
   useEffect(() => {
     if (localData.playerId != "") {
-      const newSocket = io("https://colour-matcher-server-811abd218ab9.herokuapp.com", { // http://localhost:3004 https://colour-matcher-server.vercel.app/ https://colour-matcher-server-811abd218ab9.herokuapp.com/
+      const newSocket = io("https://colour-matcher-server-811abd218ab9.herokuapp.com", { // http://localhost:3004 http://192.168.0.101:3004  https://colour-matcher-server-811abd218ab9.herokuapp.com
         // path: "/home",
         query: {
           nickname: localData.nickname,
@@ -299,21 +302,24 @@ export default function PlayerHome() {
       let newPlayers = thePlayers.filter((player: any) => player.id !== id)
       let currentTurn = gameDoc.data().turn
       // debugger
-      if (newPlayers.length <= Number(currentTurn)) {
+      if (isCpuActive) {
+        // debugger
+        await updateDoc(dataRef, {
+          turn: "0",
+          players: newPlayers,
+          cpu: false
+        })
+      } else if (newPlayers.length <= Number(currentTurn)) {
         currentTurn = newPlayers.length - 1
         // debugger
         await updateDoc(dataRef, {
           turn: currentTurn.toString(),
           players: newPlayers
         })
-        // localStorage.removeItem("colourMatcherPlayerData")
-        // router.push("/")
       } else {
         await updateDoc(dataRef, {
           players: newPlayers
         })
-        // localStorage.removeItem("colourMatcherPlayerData")
-        // router.push("/")
       }
     } else {
       console.log("No such document!");
@@ -406,6 +412,9 @@ export default function PlayerHome() {
       // let allPlayersList = [{ nickName: "", id: "" }]
       setAllPlayers(error.ownership.filter((player: any) => player.id != localData.playerId))
       // }
+      if (error.isOwner) {
+        setIsCpuActive(error.cpu)
+      }
       if (error.winningPattern) {
         setWinningPattern(error.winningPattern)
         setMatchCount(0)
@@ -419,9 +428,9 @@ export default function PlayerHome() {
         socket.emit("start_game", { turn: false })
         handleOpen()
       } else {
-        if (error.isTimed) {          
+        if (error.isTimed) {
           socket.emit("start_game", { turn: error.nextTurn.toString(), roomId: localData.roomId })
-          if(error.isTurn) {
+          if (error.isTurn) {
             setTimer("timer")
           } else {
             setTimer("")
@@ -470,7 +479,6 @@ export default function PlayerHome() {
         players: newPlayers,
         turn: newTurn.toString()
       })
-
       //using a try/catch
       // try {
       //   debugger
@@ -540,6 +548,15 @@ export default function PlayerHome() {
   //   }
   // }
 
+  function copyUrl() {
+    copyToClipboard(localData.url)
+    setUrlCopied(true)
+    const copyLinkNotify = setTimeout(() => {
+      setUrlCopied(false)
+      clearTimeout(copyLinkNotify)
+    }, 400)
+  }
+
   async function reset(action?: string) {
     setMatchCount(0)
     if (!isWon && !hasWon) {
@@ -552,10 +569,13 @@ export default function PlayerHome() {
       const thePlayers = gameDoc.data().players
       const newDefault = shuffleArray(gameDoc.data().default)
       const nextRound = Number(gameDoc.data().round) + 1
-      const playsReset = thePlayers.map((player: any) => {
+      const playsReset = thePlayers.map((player: any, idx: number) => {
         player.played = ["", "", "", ""]
         if (action == "reset") {
           player.roundsWon = "0"
+        }
+        if (isCpuActive && idx == 1) {
+          player.pattern = []
         }
         return player
       })
@@ -564,7 +584,7 @@ export default function PlayerHome() {
       // debugger
       await updateDoc(dataRef, {
         players: playsReset,
-        turn: Math.floor(Math.random() * thePlayers.length).toString(),
+        turn: isCpuActive ? "0" : Math.floor(Math.random() * thePlayers.length).toString(),
         default: newDefault,
         round: action == "reset" ? "0" : nextRound.toString()
       })
@@ -658,32 +678,61 @@ export default function PlayerHome() {
             )
           })}
         </div>
+        <div className={`${urlCopied ? "flex items-center justify-center" : "hidden"} absolute border border-[black] left-[180px]  text-[12px] bottom-[35px] bg-[#F5F5F5] px-[5px] rounded-[10px]`}>
+          <h2>Link Copied!</h2>
+        </div>
         <div className={`${showModes ? "" : "hidden"} absolute border border-[red] w-[100px] text-[12px] left-[180px] bottom-[45px] bg-[#F5F5F5] p-[10px] rounded-[10px]`}>
           {modes.map((mode: any, idx: number) => {
+            if (isOwner) {
+              return (
+                <div key={idx} className="flex items-center gap-[5px]">
+                  <button disabled={isCpuActive} onClick={() => { mode.func(!isTimedMode) }} className={`w-[13px] h-[13px]  rounded-[50%] ${isTimedMode ? "bg-[#F86464]" : isCpuActive ? "bg-[darkgray]" : "bg-[lightgreen]"} ${isOwner ? "flex" : "hidden"} justify-center items-center`}>
+                    <div className="bg-white h-[2px] w-[8px] rounded-[2px]"></div>
+                  </button>
+                  <h2 className={`${isCpuActive ? "text-[darkgray]":""}`}>{mode.name}</h2>
+                </div>
+              )
+            }
             return (
               <div key={idx} className="flex items-center gap-[5px]">
-                <button onClick={() => { mode.func(!isTimedMode) }} className={`w-[13px] h-[13px] cursor-pointer  rounded-[50%] ${isTimedMode ? "bg-[#F86464]" : "bg-[lightgreen]"} ${isOwner ? "flex" : "hidden"} justify-center items-center`}>
-                  <div className="bg-white h-[2px] w-[8px] rounded-[2px]"></div>
-                </button>
+                <div className={`w-[13px] h-[13px] cursor-pointer  rounded-[50%] ${isTimedMode ? "bg-[lightgreen]" : "bg-[#F86464]"} flex justify-center items-center`}>
+                </div>
                 <h2>{mode.name}</h2>
               </div>
             )
           })}
         </div>
-        <button ref={playersRef} onClick={() => { setShowPlayers(!showPlayers) }} className="relative w-[35px] h-[35px]">
-          <Image alt="Players" fill={true} src="../icons/player-icon.svg" />
+        <button ref={playersRef} onClick={() => { setShowPlayers(!showPlayers) }} className="relative w-[35px] h-[35px] px-[2px] active:border rounded-[5px] active:border-[lightgreen]">
+          <div className="w-[30px] h-[30px] relative">
+            <Image alt="Players" fill={true} src="../icons/player-icon.svg" />
+          </div>
+
         </button>
-        <button onClick={() => { handleOpen() }} className="relative w-[35px] h-[35px]">
-          <Image alt="Players" fill={true} src="../icons/trophy.svg" />
+        <button onClick={() => { handleOpen() }} className="relative w-[35px] h-[35px] px-[2px] active:border rounded-[5px] active:border-[lightgreen]">
+          <div className="w-[30px] h-[30px] relative">
+            <Image alt="Players" fill={true} src="../icons/trophy.svg" />
+          </div>
+
         </button>
-        <button onClick={() => { handleInstructionsOpen() }} className="relative w-[35px] h-[35px]">
-          <Image alt="Players" fill={true} src="../icons/help.svg" />
+        <button onClick={() => { handleInstructionsOpen() }} className="relative w-[35px] h-[35px] px-[2px] active:border rounded-[5px] active:border-[lightgreen]">
+          <div className="w-[30px] h-[30px] relative">
+            <Image alt="Players" fill={true} src="../icons/help.svg" />
+          </div>
         </button>
-        <button ref={modesRef} onClick={() => { setShowModes(!showModes) }} className="relative w-[35px] cursor-pointer h-[35px]">
-          <Image alt="Players" fill={true} src="../icons/modes.svg" />
+        <button ref={modesRef} onClick={() => { setShowModes(!showModes) }} className="relative w-[35px]  px-[2px] active:border rounded-[5px] active:border-[lightgreen] h-[35px]">
+          <div className="w-[30px] h-[30px] relative">
+            <Image alt="Players" fill={true} src="../icons/modes.svg" />
+          </div>
         </button>
-        <button onClick={() => { copyToClipboard(localData.url) }} className={` ${allPlayers ? "relative w-[35px] h-[35px]" : "hidden"} cursor-pointer`}>
-          <Image className="cursor-pointer" alt="Players" fill={true} src="../icons/copy-link.svg" />
+        <button onClick={() => { copyUrl() }} className={` ${allPlayers ? "relative w-[35px] h-[35px]" : "hidden"} px-[2px] active:border rounded-[5px] active:border-[lightgreen] `}>
+          <div className="w-[30px] h-[30px] relative">
+            <Image className="cursor-pointer" alt="Players" fill={true} src="../icons/copy-link.svg" />
+          </div>
+        </button>
+        <button disabled={isCpuActive || (allPlayers.length > 0)} onClick={() => { socket.emit("add_bot") }} className={`${isOwner ? "relative w-[30px] h-[30px]" : "hidden"}  pt-[2px] active:border rounded-[5px] active:border-[lightgreen] ${isCpuActive ? "border border-[lightgreen]" : ""} flex items-center justify-center`}>
+          <div className="w-[30px] h-[30px] relative borde">
+            <RiRobot3Line className={`-rotate-[90] ${isCpuActive ? "text-[lightgreen]" : "text-[red]"} w-[28px] h-[28px]`} />
+          </div>
         </button>
       </div>
       <Modal
