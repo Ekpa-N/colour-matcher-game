@@ -7,37 +7,10 @@ import { v4 as uuidv4 } from "uuid"
 import Image from 'next/image';
 import { db } from '@/firebase';
 import LoadingScreen from './Loader';
-import Box from '@mui/material/Box';
-import Button from '@mui/material/Button';
-import Typography from '@mui/material/Typography';
-import Modal from '@mui/material/Modal';
-import { collection, addDoc, getDocs, limit, query, where, doc, updateDoc, setDoc, getDoc, startAt, startAfter, getCountFromServer, serverTimestamp, endBefore, onSnapshot, deleteDoc } from "firebase/firestore";
-import { List, ListItemText } from '@mui/material';
-import { io } from 'socket.io-client';
+import { doc, updateDoc, getDoc } from "firebase/firestore";
+import Instructions from './InstructionsModal';
 
-const styleTwo = {
-    position: 'absolute' as 'absolute',
-    top: '40%',
-    left: '50%',
-    transform: 'translate(-50%, -50%)',
-    width: 350,
-    height: 500,
-    bgcolor: '#fffff0',
-    boxShadow: 24,
-    p: 4,
-    display: "flex",
-    flexDirection: "column",
-    overflow: "auto",
-    borderRadius: "20px"
-  };
 
-  const instructionList = {
-    display: "flex",
-    flexDirection: "column",
-    gap: "10px",
-    borderRadius: "10px"
-  }
-  
 export default function CreateGamePage() {
     const searchParams = useSearchParams()
     const [gameDetails, setGameDetails] = useState<{ nickname: string, players: string }>({ nickname: "", players: "2" })
@@ -49,9 +22,13 @@ export default function CreateGamePage() {
     const pattern = ["#20958E", "#AFD802", "#DF93D2", "#F7E270"]
     const [isCreated, setIsCreated] = useState<boolean>(false)
     const [loadError, setLoadError] = useState<boolean>(false)
-    const [instructions, setInstructions] = useState(false);
+    const [instructions, setInstructions] = useState(true);
+    const [instructionsPage, setInstructionsPage] = useState<number>(1)
 
-
+    
+    const handleInstructionsPage = (page:number) =>{
+        setInstructionsPage(page)
+    }
     const handleInstructionsOpen = () => setInstructions(true);
     const handleInstructionsClose = () => {
         setInstructions(false)
@@ -267,7 +244,7 @@ export default function CreateGamePage() {
 
             <button onClick={() => { handleInstructionsOpen() }} className={`border rounded w-[328px] h-[44px] rounded-[30px] absolute bottom-2 text-center font-[be] font-[700] justify-center text-[#fff] active:text-[#000] active:bg-[#FFF] items-center bg-[#000] `}>How to play</button>
 
-            <Modal
+            {/* <Modal
                 open={instructions}
                 onClose={handleInstructionsClose}
                 aria-labelledby="modal-modal-title"
@@ -277,20 +254,86 @@ export default function CreateGamePage() {
                     <Typography variant="h4" component="h2">
                         How to play.
                     </Typography>
-                    <List sx={instructionList}>
-                        <ListItemText primary="Tap/click any coloured circle to highlight it and select that colour." />
-                        <ListItemText primary="Next, tap/click any of the four circles with a plus sign to apply your selected colour." />
-                        <ListItemText primary="Repeat steps 1 and 2 above as many times as you like to create a pattern with all four colours." />
-                        <ListItemText primary={`Click/tap the "Play Selection" button to play your pattern and wait for your opponent.`} />
-                        <ListItemText primary={`The turn notification bar at the top left displays whose turn it is.`} />
-                        <ListItemText primary={`The hint bar at the top right displays how many correct colour matches you played on your last turn.`} />
-                        <ListItemText primary={`A round ends when someone plays a pattern that matches the game's secret pattern.`} />
-                        <ListItemText primary={`The leaderboard displays a record of players' scores starting with the hightest.`} />
-                        <ListItemText primary={`Click/tap the "Next Round" button to keep the scores and restart the game with a new pattern.`} />
-                        <ListItemText primary={`Click/tap the "Reset" button to erase the scores and restart the game with a new pattern.`} />
-                    </List>
+                    <Box sx={instructionStyle}>
+                        <p>Arrange the colours to match a secret pattern</p>
+                        <div className='flex mt-[20px]'>
+                            <div className='border rounded-[10px] p-[5px] gap-[10px] flex flex-col h-fit'>
+                                <div className='flex gap-[5px]'>
+                                    {instructionButtons.map((button: string, idx: number) => {
+                                        return (
+                                            <button key={idx} className={`w-[25px] flex justify-center items-center h-[25px] border bg-[#fffff0] text-[11px] border-[#D4D8BE] text-[#D4D8BE] rounded-[50%]`}>
+                                                {idx + 1}
+                                            </button>
+                                        )
+                                    })}
+                                </div>
+                                <div className='flex gap-[5px]'>
+                                    {instructionButtons.map((button: string, idx: number) => {
+                                        return (
+                                            <button style={{ backgroundColor: `${button}` }} key={idx} className={`w-[25px] flex justify-center items-center h-[25px] border bg-[#fffff0] text-[11px] border-[#D4D8BE] text-[#D4D8BE] rounded-[50%]`}>
+                                            </button>
+                                        )
+                                    })}
+                                </div>
+                            </div>
+                            <div className='borde rounded-[10px] grow flex-col'>
+                                <div className='flex relative items-center'>
+                                    <LiaLongArrowAltDownSolid className='h-[35px] relative text-[gray]' />
+                                    <p className='relative borde grow h-fit flex text-[13.5px] text-center'>Tap to set it anywhere here</p>
+                                </div>
+                                <div className='flex relative items-center'>
+                                    <LiaLongArrowAltDownSolid className='h-[35px] relative text-[gray]' />
+                                    <p className='relative borde grow h-fit flex text-[13.5px] text-center'>Tap to pick a colour here</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div className='flex mt-[5px] items-center'>
+                            <button className={`border border-black active:bg-[#f6ebf4] active:text-[#338f1f] w-[126px] active:text-[#fff] h-[15px] text-[12px] flex justify-center items-center rounded-[50px] font-be`}>Play Your Selection</button>
+                            <div className='flex relative items-center'>
+                                <LiaLongArrowAltDownSolid className='h-[35px] relative text-[gray]' />
+                                <p className='relative borde grow h-fit flex text-[13.5px] text-center'>Tap to play your selection</p>
+                            </div>
+                        </div>
+                        <div className='flex mt-[5px] items-center'>
+                            <div className='w-[125px] flex justify-center'>
+                                <div className='border flex gap-[5px] p-[2px] rounded-[10px]'>
+                                    {instructionButtons.map((button: string, idx: number) => {
+                                        return (
+                                            <button key={idx} className={`w-[19px] h-[19px] border bg-[#fffff0] text-[#000080]  rounded-[50%]`}>
+                                            </button>
+                                        )
+                                    })}
+                                </div>
+                            </div>
+                            <div className='flex relative items-center'>
+                                <LiaLongArrowAltDownSolid className='h-[35px] relative text-[gray]' />
+                                <p className='relative borde grow h-fit flex text-[13.5px] text-center'>Shows your last selection</p>
+                            </div>
+                        </div>
+
+                        <div className='flex mt-[5px] items-center'>
+                            <div className='flex justify-center w-[126px]'>
+                                <button className={`border border-black p-[10px] active:bg-[#f6ebf4] active:text-[#338f1f] active:text-[#fff] h-[15px] text-[12px] flex justify-center items-center rounded-[50px] font-be`}>You matched 2</button>
+                            </div>
+                            <div className='flex relative items-center'>
+                                <LiaLongArrowAltDownSolid className='h-[35px] relative text-[gray]' />
+                                <p className='relative borde grow h-fit flex text-[13.5px] text-center'>Matches on last selection</p>
+                            </div>
+                        </div>
+                        <div className='flex mt-[5px] items-center'>
+                            <div className='flex justify-center w-[126px]'>
+                                <button className={`border border-black p-[10px] active:bg-[#f6ebf4] active:text-[#338f1f] active:text-[#fff] h-[15px] text-[12px] flex justify-center items-center rounded-[50px] font-be`}>Your Turn</button>
+                            </div>
+                            <div className='flex relative items-center'>
+                                <LiaLongArrowAltDownSolid className='h-[35px] relative text-[gray]' />
+                                <p className='relative borde grow h-fit flex text-[13.5px] text-center'>Shows current player</p>
+                            </div>
+                        </div>
+
+                    </Box>
                 </Box>
-            </Modal>
+            </Modal> */}
+            <Instructions instructionsPage={instructionsPage} handleInstructionsPage={handleInstructionsPage} instructions={instructions} handleInstructionsClose={handleInstructionsClose} handleInstructionsOpen={handleInstructionsOpen} />
 
         </main>
     )

@@ -18,6 +18,7 @@ import { List, ListItemText, Table, TableBody, TableCell, TableHead, TableRow } 
 import LoadingScreen from "@/components/Loader";
 import axios from "axios";
 import { RiRobot3Line, RiRobot2Line } from "react-icons/ri";
+import Instructions from "@/components/InstructionsModal";
 
 
 const style = {
@@ -33,53 +34,16 @@ const style = {
   flexDirection: "column",
   borderRadius: "20px"
 };
-const styleTwo = {
-  position: 'absolute' as 'absolute',
-  top: '40%',
-  left: '50%',
-  transform: 'translate(-50%, -50%)',
-  width: 350,
-  height: 500,
-  bgcolor: '#fffff0',
-  boxShadow: 24,
-  p: 4,
-  display: "flex",
-  flexDirection: "column",
-  overflow: "auto",
-  borderRadius: "20px"
-};
 
-const styleThree = {
-  fontSize: "30px"
-}
 
-const warnModal = {
-  width: "300px",
-  height: "200px",
-  border: "1px solid yellow"
-}
 
-const instructionList = {
-  display: "flex",
-  flexDirection: "column",
-  gap: "10px",
-  borderRadius: "10px"
-}
+
 
 const buttonStyle = {
   width: "140px",
   marginTop: "10px",
   border: "1px solid #fffff0",
   color: "#000008"
-}
-
-const leaderBoardButton = {
-  minWidth: "80px",
-  selfAlign: "left",
-  color: "#000080",
-  backgroundColor: "#fffff0",
-  border: "1px solid #000008",
-  // boxShadow: "1",
 }
 
 const loserInsults = [
@@ -155,7 +119,12 @@ export default function PlayerHome() {
   const [isTimedMode, setIsTimedMode] = useState<boolean>(false)
   const [isCpuActive, setIsCpuActive] = useState<boolean>(false)
   const [urlCopied, setUrlCopied] = useState<boolean>(false)
+  const [instructionsPage, setInstructionsPage] = useState<number>(1)
 
+
+  const handleInstructionsPage = (page: number) => {
+    setInstructionsPage(page)
+  }
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
   const handleInstructionsOpen = () => setInstructions(true);
@@ -423,7 +392,7 @@ export default function PlayerHome() {
       window.removeEventListener('click', handleClickOutside);
     };
   }, [showPlayers, showModes]);
-  
+
 
   useEffect(() => {
     if (error == "removed") {
@@ -741,7 +710,6 @@ export default function PlayerHome() {
           <div className="w-[30px] h-[30px] relative">
             <Image alt="Players" fill={true} src="../icons/player-icon.svg" />
           </div>
-
         </button>
         <button onClick={() => { handleOpen() }} className="relative w-[35px] h-[35px] px-[2px] active:border rounded-[5px] active:border-[lightgreen]">
           <div className="w-[30px] h-[30px] relative">
@@ -754,6 +722,7 @@ export default function PlayerHome() {
             <Image alt="Players" fill={true} src="../icons/help.svg" />
           </div>
         </button>
+
         <button ref={modesRef} onClick={() => { setShowModes(!showModes) }} className="relative w-[35px]  px-[2px] active:border rounded-[5px] active:border-[lightgreen] h-[35px]">
           <div className="w-[30px] h-[30px] relative">
             <Image alt="Players" fill={true} src="../icons/modes.svg" />
@@ -807,7 +776,7 @@ export default function PlayerHome() {
           </Box>
         </Box>
       </Modal>
-      <Modal
+      {/* <Modal
         open={instructions}
         onClose={handleInstructionsClose}
         aria-labelledby="modal-modal-title"
@@ -830,7 +799,8 @@ export default function PlayerHome() {
             <ListItemText primary={`Click/tap the "Reset" button to erase the scores and restart the game with a new pattern.`} />
           </List>
         </Box>
-      </Modal>
+      </Modal> */}
+      <Instructions instructionsPage={instructionsPage} handleInstructionsPage={handleInstructionsPage} instructions={instructions} handleInstructionsClose={handleInstructionsClose} handleInstructionsOpen={handleInstructionsOpen} />
       <div className="flex flex-col gap-[3px]">
         {playerStatus.map((status: string) => {
           return (
