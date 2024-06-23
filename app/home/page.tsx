@@ -423,12 +423,7 @@ export default function PlayerHome() {
       window.removeEventListener('click', handleClickOutside);
     };
   }, [showPlayers, showModes]);
-
-  //   axios.post("https://playerstatus-djhwq4ivna-uc.a.run.app", { roomID: playerData.roomId, action: "play" }, {
-  //     headers: {
-  //         "Content-Type": "application/json"
-  //     }
-  // })
+  
 
   useEffect(() => {
     if (error == "removed") {
@@ -436,7 +431,8 @@ export default function PlayerHome() {
       localStorage.clear()
       router.push("/")
     }
-    async function playData() {
+    if (error && error.hasOwnProperty("played")) {
+      // setCurrentPattern(error.played)
       setCurrentRound(error.currentRound)
       setIsWon(error.isWon)
       setTurn(error.isTurn)
@@ -478,17 +474,6 @@ export default function PlayerHome() {
           setTimer("")
           socket.emit("start_game", { turn: false })
         }
-
-        if (Number(error.currentTurn) == 1 && error.isCpu && !error.hasWon) {
-          // debugger
-          // socket.emit("cpu_play")
-          axios.post("https://playerstatus-djhwq4ivna-uc.a.run.app", { roomID: localData.roomId, action: "play" }, {
-            headers: {
-              "Content-Type": "application/json"
-            }
-          })
-        }
-
         setWinningPattern(error.played)
         handleClose()
       }
@@ -496,10 +481,6 @@ export default function PlayerHome() {
         setIsLoading(false)
       }
     }
-    if (error && error.hasOwnProperty("played")) {
-      playData()
-    }
-
   }, [error])
 
 
