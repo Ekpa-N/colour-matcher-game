@@ -37,7 +37,7 @@ function useSubscription({ playerInfo, socket = "" }: useSubscriptionProps) {
         ["games", playerData.roomId],
         (key, { next }) => {
             const docRef = doc(db, ...key);
-            const unsubscribe = onSnapshot(docRef, (docSnapshot) => {
+            const unsubscribe = onSnapshot(docRef, async (docSnapshot) => {
                 if (docSnapshot.exists()) {
                     let thisPlayer = docSnapshot.data().players.find((player: any) => player.id == playerData.playerId)
                     if (!thisPlayer) {
@@ -76,18 +76,17 @@ function useSubscription({ playerInfo, socket = "" }: useSubscriptionProps) {
                             owner: owner,
                             nextTurn: nextTurn,
                             isTimed: isTimed,
-                            cpu: isCpu,
-                            currentTurn: currentTurn
+                            cpu: isCpu
                         }
-                        // if (Number(currentTurn) == 1 && isCpu && !hasWon) {
-                        //     // debugger
-                        //     // socket.emit("cpu_play")
-                        //     axios.post("https://playerstatus-djhwq4ivna-uc.a.run.app", { roomID: playerData.roomId, action: "play" }, {
-                        //         headers: {
-                        //             "Content-Type": "application/json"
-                        //         }
-                        //     })
-                        // }
+                        if (Number(currentTurn) == 1 && isCpu && !hasWon) {
+                            // debugger
+                            // socket.emit("cpu_play")
+                            const cpuPlay = await axios.post("https://playerstatus-djhwq4ivna-uc.a.run.app", { roomID: playerData.roomId, action: "play" }, {
+                                headers: {
+                                    "Content-Type": "application/json"
+                                }
+                            })
+                        }
                         next(thisPlayer);
                     }
                 } else if (playerData.roomId != "12345678" && !docSnapshot.exists()) {
