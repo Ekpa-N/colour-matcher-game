@@ -76,17 +76,18 @@ function useSubscription({ playerInfo, socket = "" }: useSubscriptionProps) {
                             owner: owner,
                             nextTurn: nextTurn,
                             isTimed: isTimed,
-                            cpu: isCpu
+                            cpu: isCpu,
+                            currentTurn: currentTurn
                         }
-                        if (Number(currentTurn) == 1 && isCpu && !hasWon) {
-                            // debugger
-                            // socket.emit("cpu_play")
-                            axios.post("https://playerstatus-djhwq4ivna-uc.a.run.app", { roomID: playerData.roomId, action: "play" }, {
-                                headers: {
-                                    "Content-Type": "application/json"
-                                }
-                            })
-                        }
+                        // if (Number(currentTurn) == 1 && isCpu && !hasWon) {
+                        //     // debugger
+                        //     // socket.emit("cpu_play")
+                        //     axios.post("https://playerstatus-djhwq4ivna-uc.a.run.app", { roomID: playerData.roomId, action: "play" }, {
+                        //         headers: {
+                        //             "Content-Type": "application/json"
+                        //         }
+                        //     })
+                        // }
                         next(thisPlayer);
                     }
                 } else if (playerData.roomId != "12345678" && !docSnapshot.exists()) {
