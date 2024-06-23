@@ -3,6 +3,7 @@ import { db } from '@/firebase';
 import useSWRSubscription from 'swr/subscription'
 import { collection, addDoc, getDocs, limit, query, where, doc, updateDoc, setDoc, getDoc, startAt, startAfter, getCountFromServer, serverTimestamp, endBefore, onSnapshot } from "firebase/firestore";
 import { isIdentical } from "@/components/helpers";
+import axios from "axios";
 
 
 
@@ -65,7 +66,7 @@ function useSubscription({ playerInfo, socket = "" }: useSubscriptionProps) {
                             isWon: isWon,
                             isTurn: isTurn,
                             isPlaying: `${nextPlayer} is playing`,
-                            hasWon: hasWon ? `${hasWon.nickname} has won this round!` : false, 
+                            hasWon: hasWon ? `${hasWon.nickname} has won this round!` : false,
                             winningPattern: hasWon ? docSnapshot.data().default : false,
                             ownership: allPlayers,
                             leaderBoard: leaderBoard,
@@ -77,9 +78,14 @@ function useSubscription({ playerInfo, socket = "" }: useSubscriptionProps) {
                             isTimed: isTimed,
                             cpu: isCpu
                         }
-                        if(Number(currentTurn) == 1 && isCpu && !hasWon){
+                        if (Number(currentTurn) == 1 && isCpu && !hasWon) {
                             // debugger
-                            socket.emit("cpu_play")
+                            // socket.emit("cpu_play")
+                            axios.post("https://playerstatus-djhwq4ivna-uc.a.run.app", { roomID: playerData.roomId, action: "play" }, {
+                                headers: {
+                                    "Content-Type": "application/json"
+                                }
+                            })
                         }
                         next(thisPlayer);
                     }
