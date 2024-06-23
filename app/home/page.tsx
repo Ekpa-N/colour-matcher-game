@@ -176,6 +176,40 @@ export default function PlayerHome() {
     }
   ]
 
+  async function addCpu() {
+    const newBotData = {
+      document: localData.roomId,
+      defaultPattern: [],
+      player: { id: "match-n-botter", pattern: [], nickname: "Rehctam", played: ["", "", "", ""], roundsWon: "0" },
+      isNew: false,
+      isCpu: true
+    }
+
+    try {
+      const newGame = await axios.post(`${process.env.newGame}`, newBotData, {
+        headers: {
+          "Content-Type": "application/json"
+        }
+      });
+      if (newGame.status === 200) {
+        console.log("Bot added")
+      }
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        console.error('Error message:', error.message)
+        setIsLoading(false)
+        if (error.response) {
+          console.error('Response data:', error.response.data)
+          console.error('Response status:', error.response.status)
+          setIsLoading(false)
+        }
+      } else {
+        console.error('Unexpected error:', error);
+        setIsLoading(false)
+      }
+    }
+  }
+
   function handleClickOutside(event: MouseEvent) {
     if (playersRef.current && !playersRef.current.contains(event.target as Node)) {
       setShowPlayers(false);
@@ -689,7 +723,7 @@ export default function PlayerHome() {
                   <button disabled={isCpuActive} onClick={() => { mode.func(!isTimedMode) }} className={`w-[13px] h-[13px]  rounded-[50%] ${isTimedMode ? "bg-[#F86464]" : isCpuActive ? "bg-[darkgray]" : "bg-[lightgreen]"} ${isOwner ? "flex" : "hidden"} justify-center items-center`}>
                     <div className="bg-white h-[2px] w-[8px] rounded-[2px]"></div>
                   </button>
-                  <h2 className={`${isCpuActive ? "text-[darkgray]":""}`}>{mode.name}</h2>
+                  <h2 className={`${isCpuActive ? "text-[darkgray]" : ""}`}>{mode.name}</h2>
                 </div>
               )
             }
@@ -729,7 +763,7 @@ export default function PlayerHome() {
             <Image className="cursor-pointer" alt="Players" fill={true} src="../icons/copy-link.svg" />
           </div>
         </button>
-        <button disabled={isCpuActive || (allPlayers.length > 0)} onClick={() => { socket.emit("add_bot") }} className={`${isOwner ? "relative w-[30px] h-[30px]" : "hidden"}  pt-[2px] active:border rounded-[5px] active:border-[lightgreen] ${isCpuActive ? "border border-[lightgreen]" : ""} flex items-center justify-center`}>
+        <button disabled={isCpuActive || (allPlayers.length > 0)} onClick={() => { addCpu() }} className={`${isOwner ? "relative w-[30px] h-[30px]" : "hidden"}  pt-[2px] active:border rounded-[5px] active:border-[lightgreen] ${isCpuActive ? "border border-[lightgreen]" : ""} flex items-center justify-center`}>
           <div className="w-[30px] h-[30px] relative borde">
             <RiRobot3Line className={`-rotate-[90] ${isCpuActive ? "text-[lightgreen]" : "text-[red]"} w-[28px] h-[28px]`} />
           </div>
