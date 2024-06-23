@@ -622,7 +622,7 @@ export default function PlayerHome() {
       <div className="absolute border right-[1px]">
       </div>
       <div className='relative w-[104px] h-[24px] self-center'>
-        <Image alt='logo' src="/images/colour-matcher-loader.svg" fill={true} />
+        <Image alt='logo' src="/images/colour-matcher-logo.svg" fill={true} />
       </div>
 
       <div className="w-fit px-[10px] flex justify-center items-center text-[11px] h-[20px] rounded-[10px] bg-[black] text-[white] font-be">
