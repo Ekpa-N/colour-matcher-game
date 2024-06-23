@@ -4,6 +4,7 @@ import useSWRSubscription from 'swr/subscription'
 import { collection, addDoc, getDocs, limit, query, where, doc, updateDoc, setDoc, getDoc, startAt, startAfter, getCountFromServer, serverTimestamp, endBefore, onSnapshot } from "firebase/firestore";
 import { isIdentical } from "@/components/helpers";
 import axios from "axios";
+// import { delay } from "framer-motion";
 
 
 
@@ -15,6 +16,10 @@ async function fetchDefaultPattern(playerInfo: string) {
         newData = docSnapshot.data()
     }
     return newData
+}
+
+function holdPlay(ms: number) {
+    return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 type useSubscriptionProps = {
@@ -78,16 +83,37 @@ function useSubscription({ playerInfo, socket = "" }: useSubscriptionProps) {
                             isTimed: isTimed,
                             cpu: isCpu
                         }
-                        if (Number(currentTurn) == 1 && isCpu && !hasWon) {
-                            // debugger
-                            // socket.emit("cpu_play")
-                            const cpuPlay = await axios.post("https://playerstatus-djhwq4ivna-uc.a.run.app", { roomID: playerData.roomId, action: "play" }, {
-                                headers: {
-                                    "Content-Type": "application/json"
-                                }
-                            })
-                        }
+                        // if (Number(currentTurn) == 1 && isCpu && !hasWon) {
+                        //     // debugger
+                        //     // socket.emit("cpu_play")
+                        //     let attempts = 0
+                        //     while (attempts < 3) {
+                        //         try {
+                        //             const cpuPlay = await axios.post("https://playerstatus-djhwq4ivna-uc.a.run.app", { roomID: playerData.roomId, action: "play" }, {
+                        //                 headers: {
+                        //                     "Content-Type": "application/json"
+                        //                 }
+                        //             })
+                        //         } catch(error) {}                                
+                        //     }
+                        // }
                         next(thisPlayer);
+                        if (Number(currentTurn) == 1 && isCpu && !hasWon) {
+                            await holdPlay(5000)
+                            let attempts = 0;
+                            while (attempts < 3) {
+                                try {
+                                    const cpuPlay = await axios.post("https://playerstatus-djhwq4ivna-uc.a.run.app", { roomID: playerData.roomId, action: "play" }, {
+                                        headers: {
+                                            "Content-Type": "application/json"
+                                        }
+                                    });
+                                    break; // Exit the loop if the request is successful
+                                } catch (error) {
+                                    attempts++;
+                                }
+                            }
+                        }
                     }
                 } else if (playerData.roomId != "12345678" && !docSnapshot.exists()) {
                     next("removed")
