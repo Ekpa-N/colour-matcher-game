@@ -2,7 +2,7 @@
 import Image from "next/image";
 import ColourMatcher from "@/components/ColourMatcher";
 import AppContext from "@/components/Provider";
-import { useEffect, useState, useRef, ReactEventHandler, ReactHTMLElement } from "react";
+import { useEffect, useState, useRef, ReactEventHandler, ReactHTMLElement, ChangeEvent } from "react";
 import { io } from 'socket.io-client';
 import { useRouter } from "next/navigation";
 import { db } from '@/firebase';
@@ -44,6 +44,12 @@ const buttonStyle = {
   marginTop: "10px",
   border: "1px solid #fffff0",
   color: "#000008"
+}
+const addBotButton = {
+  marginTop: "10px",
+  border: "1px solid black",
+  color: "#000008",
+  p: "0px 5px"
 }
 
 const loserInsults = [
@@ -120,10 +126,23 @@ export default function PlayerHome() {
   const [isCpuActive, setIsCpuActive] = useState<boolean>(false)
   const [urlCopied, setUrlCopied] = useState<boolean>(false)
   const [instructionsPage, setInstructionsPage] = useState<number>(1)
+  const [bot, setBot] = useState<{ name: string, form: boolean, loading: boolean, error: boolean }>({ name: "", form: false, loading: false, error: false })
 
 
   const handleInstructionsPage = (page: number) => {
     setInstructionsPage(page)
+  }
+  const handleBotFormOpen = () => setBot({ ...bot, name: bot.name, form: true })
+  const handleBotFormClose = () => {
+    if(bot.loading) {
+      return
+    }
+    setBot({ ...bot, name: bot.name, form: false })
+  }
+  const handleBotFormChange = (e: ChangeEvent<HTMLInputElement>) => {
+    // debugger
+    setBot({...bot, error: false})
+    setBot({ ...bot, name: e.target.value })
   }
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
@@ -134,7 +153,6 @@ export default function PlayerHome() {
   };
 
   const handleHelpClose = () => setReadHelp(false);
-  // const handleHelpOpen = () => setReadHelp(true);
   const playersRef = useRef<HTMLButtonElement>(null)
   const modesRef = useRef<HTMLButtonElement>(null)
   const modes: { name: string, key: string, func: (mode: boolean) => Promise<void> }[] = [
@@ -146,10 +164,11 @@ export default function PlayerHome() {
   ]
 
   async function addCpu() {
+    setBot({ ...bot, loading: true, error: false })
     const newBotData = {
       document: localData.roomId,
       defaultPattern: [],
-      player: { id: "match-n-botter", pattern: [], nickname: "Rehctam", played: ["", "", "", ""], roundsWon: "0" },
+      player: { id: "match-n-botter", pattern: [], nickname: bot.name, played: ["", "", "", ""], roundsWon: "0" },
       isNew: false,
       isCpu: true
     }
@@ -161,11 +180,14 @@ export default function PlayerHome() {
         }
       });
       if (newGame.status === 200) {
+        setBot({ ...bot, loading: false })
+        handleBotFormClose()
         console.log("Bot added")
       }
     } catch (error) {
       if (axios.isAxiosError(error)) {
-        console.error('Error message:', error.message)
+        setBot({ ...bot, loading: false, error: true })
+        console.error('Error message:', error.message)        
         setIsLoading(false)
         if (error.response) {
           console.error('Response data:', error.response.data)
@@ -174,6 +196,7 @@ export default function PlayerHome() {
         }
       } else {
         console.error('Unexpected error:', error);
+        setBot({ ...bot, loading: false, error: true })
         setIsLoading(false)
       }
     }
@@ -230,20 +253,7 @@ export default function PlayerHome() {
       players = docSnap.data().players
       const currentPlayer = players.find(player => player.id == existingDetails.playerId)
       if (currentPlayer) {
-        // const isReload = JSON.parse(localStorage.getItem("isReload") as string)
-        // if (!isReload) {
-        //   setInstructions(true)
-        // }
         setLocalData(existingDetails)
-        // const newSocket = io("http://localhost:3004", {
-        //   path: "/home",
-        //   query: {
-        //     nickname: existingDetails.nickname,
-        //     room: existingDetails.roomId
-        //   }
-        // })
-
-        // setSocket(newSocket)
         return
       }
       localStorage.removeItem("colourMatcherPlayerData")
@@ -483,22 +493,6 @@ export default function PlayerHome() {
         players: newPlayers,
         turn: newTurn.toString()
       })
-      //using a try/catch
-      // try {
-      //   debugger
-      //   const played = await axios.post(`${process.env.play}`, {
-      //     roomID: localData.roomId,
-      //     players: newPlayers,
-      //     turn: newTurn.toString()
-      //   }, {
-      //     headers: {
-      //       "Content-Type": "application/json"
-      //     }
-      //   })
-      // } catch (error) { console.log("error: ") }
-
-      // using a socket
-      // socket.emit("start_game", { turn: newTurn.toString(), roomId:localData.roomId, players: newPlayers })   
 
 
       const template = gameDoc.data().default
@@ -512,45 +506,6 @@ export default function PlayerHome() {
     }
   }
 
-  // original play function
-  // async function play() {
-  //   if (!turn || isWon) {
-  //     return
-  //   }
-  //   const dataRef = doc(db, "games", localData.roomId)
-  //   const gameDoc = await getDoc(dataRef)
-  //   if (gameDoc.exists()) {
-  //     const defaultPattern = gameDoc.data().default
-  //     const thePlayers = gameDoc.data().players
-  //     const currentTurn = Number(gameDoc.data().turn)
-  //     const newTurn = currentTurn < thePlayers.length - 1 ? currentTurn + 1 : 0
-  //     const thisPlayer = gameDoc.data().players.find((player: any) => player.id == localData.playerId)
-  //     const thisPlayerIndex = gameDoc.data().players.findIndex((player: any) => player.id == localData.playerId)
-  //     thisPlayer.played = currentPattern
-  //     const matched = isIdentical(currentPattern, defaultPattern)
-  //     if (matched) {
-  //       thisPlayer.roundsWon = (Number(thisPlayer.roundsWon) + 1).toString()
-  //     }
-  //     const newPlayers = thePlayers.map((player: any) => {
-  //       if (player.id == localData.playerId) {
-  //         return thisPlayer
-  //       }
-  //       return player
-  //     })
-  //     await updateDoc(dataRef, {
-  //       players: newPlayers,
-  //       turn: newTurn.toString()
-  //     })
-  //     const template = gameDoc.data().default
-  //     const currentMatchCount = matchChecker(currentPattern, template)
-  //     setMatchCount(currentMatchCount)
-  //     // console.log("The match count is: ", matchCount)
-  //     setCurrentPattern(["", "", "", ""])
-  //     console.log("changed")
-  //   } else {
-  //     console.log("No such document!");
-  //   }
-  // }
 
   function copyUrl() {
     copyToClipboard(localData.url)
@@ -733,7 +688,7 @@ export default function PlayerHome() {
             <Image className="cursor-pointer" alt="Players" fill={true} src="../icons/copy-link.svg" />
           </div>
         </button>
-        <button disabled={isCpuActive || (allPlayers.length > 0)} onClick={() => { addCpu() }} className={`${isOwner ? "relative w-[30px] h-[30px]" : "hidden"}  pt-[2px] active:border rounded-[5px] active:border-[lightgreen] ${isCpuActive ? "border border-[lightgreen]" : ""} flex items-center justify-center`}>
+        <button disabled={isCpuActive || (allPlayers.length > 0)} onClick={() => { handleBotFormOpen() }} className={`${isOwner ? "relative w-[30px] h-[30px]" : "hidden"}  pt-[2px] active:border rounded-[5px] active:border-[lightgreen] ${isCpuActive ? "border border-[lightgreen]" : ""} flex items-center justify-center`}>
           <div className="w-[30px] h-[30px] relative borde">
             <RiRobot3Line className={`-rotate-[90] ${isCpuActive ? "text-[lightgreen]" : "text-[red]"} w-[28px] h-[28px]`} />
           </div>
@@ -776,30 +731,21 @@ export default function PlayerHome() {
           </Box>
         </Box>
       </Modal>
-      {/* <Modal
-        open={instructions}
-        onClose={handleInstructionsClose}
-        aria-labelledby="modal-modal-title"
-        aria-describedby="modal-modal-description"
+      <Modal
+        open={bot.form}
+        onClose={handleBotFormClose}
       >
-        <Box sx={styleTwo}>
-          <Typography variant="h4" component="h2">
-            How to play.
+        <Box sx={style}>
+          <Typography variant="h6" component="h2">
+            Name your challenger
           </Typography>
-          <List sx={instructionList}>
-            <ListItemText primary="Tap/click any coloured circle to highlight it and select that colour." />
-            <ListItemText primary="Next, tap/click any of the four circles with a plus sign to apply your selected colour." />
-            <ListItemText primary="Repeat steps 1 and 2 above as many times as you like to create a pattern with all four colours." />
-            <ListItemText primary={`Click/tap the "Play Selection" button to play your pattern and wait for your opponent.`} />
-            <ListItemText primary={`The turn notification bar at the top left displays whose turn it is.`} />
-            <ListItemText primary={`The hint bar at the top right displays how many correct colour matches you played on your last turn.`} />
-            <ListItemText primary={`A round ends when someone plays a pattern that matches the game's secret pattern.`} />
-            <ListItemText primary={`The leaderboard displays a record of players' scores starting with the hightest.`} />
-            <ListItemText primary={`Click/tap the "Next Round" button to keep the scores and restart the game with a new pattern.`} />
-            <ListItemText primary={`Click/tap the "Reset" button to erase the scores and restart the game with a new pattern.`} />
-          </List>
+          <Box className={`flex flex-col items-end`}>
+            {bot.loading && <input readOnly className={`w-full h-[30px] border bg-[inherit] rounded-[10px] text-[15px] px-[5px]`} />}
+            {!bot.loading && <input onChange={(e) => { handleBotFormChange(e) }} className={`w-full h-[30px] border bg-[inherit] rounded-[10px] text-[15px] px-[5px]`} placeholder="Enter your Challenger's name" />}
+            <Button disabled={bot.loading || bot.name == ""} sx={addBotButton} onClick={() => { addCpu() }} className={`border border-black ml-[10px]`}>{bot.error ? `Couldn't reach ${bot.name}, try again` : bot.loading ? `Calling ${bot.name}` : `add ${bot.name}`}</Button>
+          </Box>
         </Box>
-      </Modal> */}
+      </Modal>
       <Instructions instructionsPage={instructionsPage} handleInstructionsPage={handleInstructionsPage} instructions={instructions} handleInstructionsClose={handleInstructionsClose} handleInstructionsOpen={handleInstructionsOpen} />
       <div className="flex flex-col gap-[3px]">
         {playerStatus.map((status: string) => {
