@@ -645,7 +645,7 @@ export default function PlayerHome() {
             if (isOwner) {
               return (
                 <div key={idx} className="flex items-center gap-[5px]">
-                  <button disabled={isCpuActive} onClick={() => { mode.func(!isTimedMode) }} className={`w-[13px] h-[13px]  rounded-[50%] ${isTimedMode ? "bg-[#F86464]" : isCpuActive ? "bg-[darkgray]" : "bg-[lightgreen]"} ${isOwner ? "flex" : "hidden"} justify-center items-center`}>
+                  <button disabled={true} onClick={() => { mode.func(!isTimedMode) }} className={`w-[13px] h-[13px]  rounded-[50%] ${isTimedMode ? "bg-[#F86464]" : isCpuActive ? "bg-[darkgray]" : "bg-[lightgreen]"} ${isOwner ? "flex" : "hidden"} justify-center items-center`}>
                     <div className="bg-white h-[2px] w-[8px] rounded-[2px]"></div>
                   </button>
                   <h2 className={`${isCpuActive ? "text-[darkgray]" : ""}`}>{mode.name}</h2>
