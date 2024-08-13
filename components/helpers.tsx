@@ -1,4 +1,5 @@
 import Image from "next/image";
+import domtoimage from 'dom-to-image'
 
 function generateRandomString(): string {
   const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@';
@@ -26,7 +27,7 @@ function copyToClipboard(text: string) {
   }, function (err) {
     console.error('Could not copy text: ', err);
   });
-  
+
 }
 
 function fallbackCopyToClipboard(text: string) {
@@ -73,27 +74,6 @@ function shuffleArray(arr: string[]): string[] {
 function removeSpaces(str: string) {
   return str.replace(/\s+/g, '');
 }
-
-// function useFirestoreSubscription(collectionItem: string) {
-//   const { data, error } = useSWRSubscription(
-//       ["colours", collectionItem],
-//       (key, { next }) => {
-//           const docRef = doc(db, ...key);
-//           const unsubscribe = onSnapshot(docRef, (docSnapshot) => {
-//               if (docSnapshot.exists()) {
-//                   next(docSnapshot.data().pattern);
-//               } else {
-//                   next([]);
-//               }
-//           });
-
-//           return unsubscribe;
-//       },
-//       { fallbackData: fetchDefaultPattern(collectionItem) }
-//   );
-
-//   return { data, error };
-// }
 
 function isIdentical(arr1: string[], arr2: string[]) {
   // Check if the arrays have the same length
@@ -169,7 +149,7 @@ const modes: { name: string, key: string }[] = [
 
 
 
-function findTemplate(arrangements: {arrangement: string[], matches: number | string}[]) {
+function findTemplate(arrangements: { arrangement: string[], matches: number | string }[]) {
   const permutations = getPermutations(["red", "blue", "green", "yellow"]);
 
   for (let permutation of permutations) {
@@ -210,14 +190,117 @@ function countMatches(arr1: any[], arr2: any[]): any {
   return matches;
 }
 
+
+
+const snapshotCreator = (id: any) => {
+  return new Promise((resolve, reject) => {
+    try {
+      const scale = window.devicePixelRatio;
+      const element = id // You can use element's ID or Class here
+      domtoimage
+        .toBlob(element, {
+          height: element.offsetHeight * scale,
+          width: element.offsetWidth * scale,
+          style: {
+            transform: "scale(" + scale + ")",
+            transformOrigin: "top left",
+            width: element.offsetWidth + "px",
+            height: element.offsetHeight + "px",
+          },
+        })
+        .then((blob) => {
+          resolve(blob);
+        });
+    } catch (e) {
+      reject(e);
+    }
+  });
+};
+
+
+const copyImageToClipBoardOtherBrowsers = (id: string) => {
+  // Query for clipboard-write permission explicitly
+  navigator?.permissions
+    ?.query({ name: "clipboard-write" as PermissionName }) // Explicitly cast to PermissionName
+    .then(async (result) => {
+      if (result.state === "granted") {
+        const type = "image/png";
+        const blob = await snapshotCreator(id) as Blob;
+        let data = [new ClipboardItem({ [type]: blob })];
+        navigator.clipboard
+          .write(data)
+          .then(() => {
+            // Success
+            console.log("Image copied to clipboard successfully!");
+          })
+          .catch((err) => {
+            // Error
+            console.error("Error:", err);
+          });
+      }
+    })
+    .catch((err) => {
+      console.error("Permission query error:", err);
+    });
+};
+
+
+function getNewPlay(originalArray: string [], shuffledArray: string []): string [] {
+  // First, find the indices where the elements match between the two arrays
+  const lockedIndices = [];
+  for (let i = 0; i < originalArray.length; i++) {
+      if (originalArray[i] === shuffledArray[i]) {
+          lockedIndices.push(i);
+      }
+  }
+
+  // Create a list of indices that are not locked
+  const unlockedIndices = [];
+  for (let i = 0; i < shuffledArray.length; i++) {
+      if (!lockedIndices.includes(i)) {
+          unlockedIndices.push(i);
+      }
+  }
+
+  // Create an array with the elements that are not locked
+  const unlockedElements = unlockedIndices.map(index => shuffledArray[index]);
+
+  // Shuffle the unlocked elements
+  for (let i = unlockedElements.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [unlockedElements[i], unlockedElements[j]] = [unlockedElements[j], unlockedElements[i]];
+  }
+
+  // Place the shuffled elements back into their positions in the array
+  const resultArray = [...shuffledArray];
+  unlockedIndices.forEach((index, i) => {
+      resultArray[index] = unlockedElements[i];
+  });
+
+  return resultArray;
+}
+
 // Example usage
-// const arrangements = [
-//   { arrangement: ["red", "blue", "green", "yellow"], matches: 2 },
-//   { arrangement: ["blue", "red", "yellow", "green"], matches: 1 }
-// ];
-
-// console.log(findTemplate(arrangements));  // It should return a possible accurate match array
+const originalArray = ["#3bddgh", "#457ged", "#333333", "#4567ed", "#000000"];
+const shuffledArray = ["#457ged", "#3bddgh", "#000000", "#4567ed", "#333333"];
+// console.log(getPermutation(originalArray, shuffledArray));
 
 
 
-export { findTemplate, modes, iconButtons, generateRandomString, copyToClipboard, shuffleArray, isIdentical, matchChecker, getInsult, removeSpaces }
+
+
+export {
+  findTemplate,
+  modes,
+  iconButtons,
+  generateRandomString,
+  copyToClipboard,
+  shuffleArray,
+  isIdentical,
+  matchChecker,
+  getInsult,
+  removeSpaces,
+  snapshotCreator,
+  copyImageToClipBoardOtherBrowsers,
+  getNewPlay
+}

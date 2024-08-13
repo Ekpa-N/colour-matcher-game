@@ -7,7 +7,7 @@ import { io } from 'socket.io-client';
 import { useRouter } from "next/navigation";
 import { db } from '@/firebase';
 import { useSubscription } from "@/hooks/customHooks";
-import { shuffleArray, matchChecker, copyToClipboard, isIdentical, getInsult, iconButtons } from "@/components/helpers";
+import { shuffleArray, matchChecker, copyToClipboard, isIdentical, getInsult, iconButtons, copyImageToClipBoardOtherBrowsers } from "@/components/helpers";
 import { collection, addDoc, getDocs, limit, query, where, doc, updateDoc, setDoc, getDoc, startAt, startAfter, getCountFromServer, serverTimestamp, endBefore, onSnapshot, deleteDoc } from "firebase/firestore";
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
@@ -22,7 +22,7 @@ import Instructions from "@/components/InstructionsModal";
 
 
 const style = {
-  position: 'absolute' as 'absolute',
+  position: 'absolute',
   top: '45%',
   left: '50%',
   transform: 'translate(-50%, -50%)',
@@ -34,10 +34,6 @@ const style = {
   flexDirection: "column",
   borderRadius: "20px"
 };
-
-
-
-
 
 const buttonStyle = {
   width: "140px",
@@ -91,20 +87,19 @@ const winnerInsults = [
   "I heard them say you got lucky...losers eh, always saying something"
 ]
 
-
 export default function PlayerHome() {
   const [isLoading, setIsLoading] = useState<boolean>(true)
   const [localData, setLocalData] = useState<any>({ nickname: "", playerId: "", url: "", roomId: "12345678" })
   const router = useRouter()
   // const searchParams = useSearchParams()
-  const [pattern, setPattern] = useState<string[]>(["#20958E", "#AFD802", "#DF93D2", "#F7E270"])
-  const [currentPattern, setCurrentPattern] = useState<string[]>(["", "", "", ""])
+  const [pattern, setPattern] = useState<string[]>(["#20958E", "#AFD802", "#DF93D2", "#F7E270", "#B3EBF2"])
+  const [currentPattern, setCurrentPattern] = useState<string[]>(["", "", "", "", ""])
   const [toChange, setToChange] = useState<string>("")
   const [isWon, setIsWon] = useState<boolean>(false)
   const [turn, setTurn] = useState<any>()
   const [isPlaying, setIsPlaying] = useState<any>("")
   const [hasWon, setHasWon] = useState<any>(false)
-  const [winningPattern, setWinningPattern] = useState<boolean | string[]>(["", "", "", ""])
+  const [winningPattern, setWinningPattern] = useState<boolean | string[]>(["", "", "", "", ""])
   const [matchCount, setMatchCount] = useState<number>(0)
   const [evict, setEvict] = useState<string>("")
   const [allPlayers, setAllPlayers] = useState<any>(false)
@@ -126,7 +121,7 @@ export default function PlayerHome() {
   const [isCpuActive, setIsCpuActive] = useState<boolean>(false)
   const [urlCopied, setUrlCopied] = useState<boolean>(false)
   const [instructionsPage, setInstructionsPage] = useState<number>(1)
-  const [bot, setBot] = useState<{ name: string, form: boolean, loading: boolean, error: boolean }>({ name: "", form: false, loading: false, error: false })
+  const [bot, setBot] = useState<{ name: string, form: boolean, loading: boolean, error: boolean, level: string }>({ name: "Bot 1", form: false, loading: false, error: false, level: "easy" })
 
 
   const handleInstructionsPage = (page: number) => {
@@ -134,14 +129,22 @@ export default function PlayerHome() {
   }
   const handleBotFormOpen = () => setBot({ ...bot, name: bot.name, form: true })
   const handleBotFormClose = () => {
-    if(bot.loading) {
+    if (bot.loading) {
       return
     }
     setBot({ ...bot, name: bot.name, form: false })
   }
-  const handleBotFormChange = (e: ChangeEvent<HTMLInputElement>) => {
+  const handleBotFormChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     // debugger
-    setBot({...bot, error: false})
+    if (e.target.name == "level") {
+      setBot({ ...bot, level: e.target.value })
+      return
+    }
+    if (e.target.value == "") {
+      setBot({ ...bot, name: "Bot 1" })
+      return
+    }
+    setBot({ ...bot, error: false })
     setBot({ ...bot, name: e.target.value })
   }
   const handleOpen = () => setOpen(true);
@@ -163,12 +166,57 @@ export default function PlayerHome() {
     }
   ]
 
+
+  async function updateCpu() {
+    setBot({ ...bot, loading: true, error: false })
+    const dataRef = doc(db, "games", localData.roomId)
+
+    try {
+      const gameDoc = await getDoc(dataRef)
+      if (gameDoc.exists()) {
+        const thePlayers = gameDoc.data().players
+        const newPlayers = thePlayers.map((player: any) => {
+          if (player.id == "match-n-botter") {
+            player.level = bot.level
+            player.nickname = bot.name
+            return player
+          }
+          return player
+        })
+        await updateDoc(dataRef, {
+          players: newPlayers
+        })
+        setBot({ ...bot, loading: false })
+        handleBotFormClose()
+        console.log("Bot added")
+      } else {
+        console.log("No such document!");
+      }
+
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        setBot({ ...bot, loading: false, error: true })
+        console.error('Error message:', error.message)
+        setIsLoading(false)
+        if (error.response) {
+          console.error('Response data:', error.response.data)
+          console.error('Response status:', error.response.status)
+          setIsLoading(false)
+        }
+      } else {
+        console.error('Unexpected error:', error);
+        setBot({ ...bot, loading: false, error: true })
+        setIsLoading(false)
+      }
+    }
+  }
+
   async function addCpu() {
     setBot({ ...bot, loading: true, error: false })
     const newBotData = {
       document: localData.roomId,
       defaultPattern: [],
-      player: { id: "match-n-botter", pattern: [], nickname: bot.name, played: ["", "", "", ""], roundsWon: "0" },
+      player: { id: "match-n-botter", pattern: [], nickname: bot.name, played: ["", "", "", "", ""], roundsWon: "0", level: bot.level },
       isNew: false,
       isCpu: true
     }
@@ -187,7 +235,7 @@ export default function PlayerHome() {
     } catch (error) {
       if (axios.isAxiosError(error)) {
         setBot({ ...bot, loading: false, error: true })
-        console.error('Error message:', error.message)        
+        console.error('Error message:', error.message)
         setIsLoading(false)
         if (error.response) {
           console.error('Response data:', error.response.data)
@@ -499,7 +547,7 @@ export default function PlayerHome() {
       const currentMatchCount = matchChecker(currentPattern, template)
       setMatchCount(currentMatchCount)
       // console.log("The match count is: ", matchCount)
-      setCurrentPattern(["", "", "", ""])
+      setCurrentPattern(["", "", "", "", ""])
       console.log("changed")
     } else {
       console.log("No such document!");
@@ -529,7 +577,7 @@ export default function PlayerHome() {
       const newDefault = shuffleArray(gameDoc.data().default)
       const nextRound = Number(gameDoc.data().round) + 1
       const playsReset = thePlayers.map((player: any, idx: number) => {
-        player.played = ["", "", "", ""]
+        player.played = ["", "", "", "", ""]
         if (action == "reset") {
           player.roundsWon = "0"
         }
@@ -573,11 +621,18 @@ export default function PlayerHome() {
 
 
   return (
-    <main className="flex relative flex-col gap-[10px] border  h-[700px] items-center justify-start pt-[20px] px-[2px]">
-      <div className="absolute border right-[1px]">
-      </div>
-      <div className='relative w-[104px] h-[24px] self-center'>
-        <Image alt='logo' src="/images/colour-matcher-logo.svg" fill={true} />
+    <main className="flex relative flex-col gap-[10px] border h-[700px] items-center justify-start pt-[20px] px-[2px]">
+      {/* <div className="absolute border right-[1px]">
+      </div> */}
+      <div className="flex borde w-[90%] md:w-[400px] justify-start relative">
+        <button className="font-[600]">
+          Try a Perk?
+        </button>
+        <div className="absolute borde w-[104px] h-[24px] left-[50%] ml-[-52px]">
+          <div className='relative w-[104px] h-[24px] self-center'>
+            <Image alt='logo' src="/images/colour-matcher-logo.svg" fill={true} />
+          </div>
+        </div>
       </div>
 
       <div className="w-fit px-[10px] flex justify-center items-center text-[11px] h-[20px] rounded-[10px] bg-[black] text-[white] font-be">
@@ -598,7 +653,7 @@ export default function PlayerHome() {
         </div>
 
 
-        <div className={`flex ${isLoading ? "hidden" : ""}  flex-col items-center w-[202px] mt-[65px]  gap-[22px] relative`}>
+        <div className={`flex ${isLoading ? "hidden" : ""} borde flex-col items-center w-[245px] mt-[65px]  gap-[22px] relative`}>
           <ColourMatcher type="play" pattern={currentPattern} toChange={toChange} switchColour={switchColour} />
           <div className="border-t w-[259px] border-[#D4D8BE] top-[49%] absolute"></div>
           <ColourMatcher type="default" pattern={pattern} toChange={toChange} switchColour={switchColour} />
@@ -645,7 +700,7 @@ export default function PlayerHome() {
             if (isOwner) {
               return (
                 <div key={idx} className="flex items-center gap-[5px]">
-                  <button disabled={isCpuActive} onClick={() => { mode.func(!isTimedMode) }} className={`w-[13px] h-[13px]  rounded-[50%] ${isTimedMode ? "bg-[#F86464]" : isCpuActive ? "bg-[darkgray]" : "bg-[lightgreen]"} ${isOwner ? "flex" : "hidden"} justify-center items-center`}>
+                  <button disabled={true} onClick={() => { mode.func(!isTimedMode) }} className={`w-[13px] h-[13px]  rounded-[50%] ${isTimedMode ? "bg-[#F86464]" : isCpuActive ? "bg-[darkgray]" : "bg-[lightgreen]"} ${isOwner ? "flex" : "hidden"} justify-center items-center`}>
                     <div className="bg-white h-[2px] w-[8px] rounded-[2px]"></div>
                   </button>
                   <h2 className={`${isCpuActive ? "text-[darkgray]" : ""}`}>{mode.name}</h2>
@@ -688,7 +743,7 @@ export default function PlayerHome() {
             <Image className="cursor-pointer" alt="Players" fill={true} src="../icons/copy-link.svg" />
           </div>
         </button>
-        <button disabled={isCpuActive || (allPlayers.length > 0)} onClick={() => { handleBotFormOpen() }} className={`${isOwner ? "relative w-[30px] h-[30px]" : "hidden"}  pt-[2px] active:border rounded-[5px] active:border-[lightgreen] ${isCpuActive ? "border border-[lightgreen]" : ""} flex items-center justify-center`}>
+        <button onClick={() => { handleBotFormOpen() }} className={`${isOwner ? "relative w-[30px] h-[30px]" : "hidden"}  pt-[2px] active:border rounded-[5px] active:border-[lightgreen] ${isCpuActive ? "border border-[lightgreen]" : ""} flex items-center justify-center`}>
           <div className="w-[30px] h-[30px] relative borde">
             <RiRobot3Line className={`-rotate-[90] ${isCpuActive ? "text-[lightgreen]" : "text-[red]"} w-[28px] h-[28px]`} />
           </div>
@@ -700,8 +755,8 @@ export default function PlayerHome() {
       // aria-labelledby="modal-modal-title"
       // aria-describedby="modal-modal-description"
       >
-        <Box sx={style}>
-          <Table sx={{ width: 350 }} aria-label="simple table">
+        <Box sx={style} >
+          <Table className="leaderboard" sx={{ width: 350 }} aria-label="simple table">
             <TableHead>
               <TableRow>
                 <TableCell>Player</TableCell>
@@ -726,13 +781,14 @@ export default function PlayerHome() {
             {insult}
           </Typography>
           <Box>
-            <Button sx={buttonStyle} disabled={isWon || hasWon ? false : !isWon || !hasWon ? true : false} onClick={() => { reset() }} className={`border border-[#000008]`}>Next Round</Button>
-            <Button sx={buttonStyle} disabled={isWon || hasWon ? false : !isWon || !hasWon ? true : false} onClick={() => { reset("reset") }} className={`border border-[#000008] ml-[10px]`}>Reset Game</Button>
+            <Button sx={buttonStyle} disabled={isWon || hasWon ? false : !isWon || !hasWon ? true : false} onClick={() => { reset() }} className={`border border-[#000008]`}>Play Again?</Button>
+            <Button sx={buttonStyle} disabled={isWon || hasWon ? false : !isWon || !hasWon ? true : false} onClick={() => { reset("reset") }} className={`border border-[#000008] ml-[10px]`}>Reset Game?</Button>
+            <Button sx={buttonStyle} onClick={() => { copyImageToClipBoardOtherBrowsers("leaderboard") }} className={`border border-[#000008] ml-[10px]`}>Share Leaderboard</Button>
           </Box>
         </Box>
       </Modal>
       <Modal
-        open={bot.form}
+        open={bot.form}//{bot.form}
         onClose={handleBotFormClose}
       >
         <Box sx={style}>
@@ -742,7 +798,14 @@ export default function PlayerHome() {
           <Box className={`flex flex-col items-end`}>
             {bot.loading && <input readOnly className={`w-full h-[30px] border bg-[inherit] rounded-[10px] text-[15px] px-[5px]`} />}
             {!bot.loading && <input onChange={(e) => { handleBotFormChange(e) }} className={`w-full h-[30px] border bg-[inherit] rounded-[10px] text-[15px] px-[5px]`} placeholder="Enter your Challenger's name" />}
-            <Button disabled={bot.loading || bot.name == ""} sx={addBotButton} onClick={() => { addCpu() }} className={`border border-black ml-[10px]`}>{bot.error ? `Couldn't reach ${bot.name}, try again` : bot.loading ? `Calling ${bot.name}` : `add ${bot.name}`}</Button>
+            <div className="mt-[10px] flex gap-[10px] w-full">
+              <h2>Set Challenger Difficulty</h2>
+              <select onChange={(e) => { handleBotFormChange(e) }} name="level" className="border outline-none bg-inherit h-[25px] w-[140px]">
+                <option value="easy">Friendly</option>
+                <option value="hard">Competitive</option>
+              </select>
+            </div>
+            <Button disabled={bot.loading} sx={addBotButton} onClick={() => { isCpuActive ? updateCpu() : addCpu() }} className={`border border-black ml-[10px]`}>{bot.error ? `Couldn't reach ${bot.name}, try again` : bot.loading ? `Calling ${bot.name}` : `add ${bot.name}`}</Button>
           </Box>
         </Box>
       </Modal>

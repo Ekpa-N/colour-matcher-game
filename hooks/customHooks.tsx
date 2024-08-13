@@ -38,6 +38,7 @@ function useSubscription({ playerInfo, socket = "" }: useSubscriptionProps) {
     useEffect(() => {
         setPlayerData(playerInfo)
     }, [playerInfo])
+    
     const { data, error } = useSWRSubscription(
         ["games", playerData.roomId],
         (key, { next }) => {
@@ -97,7 +98,7 @@ function useSubscription({ playerInfo, socket = "" }: useSubscriptionProps) {
                         //         } catch(error) {}                                
                         //     }
                         // }
-                        next(thisPlayer);
+                        next(thisPlayer)
                         if (Number(currentTurn) == 1 && isCpu && !hasWon) {
                             await holdPlay(5000)
                             let attempts = 0;
