@@ -27,7 +27,7 @@ const db = new firestore()
 
 
 function findTemplate(arrangements) {
-    const permutations = getPermutations(["#20958E", "#AFD802", "#DF93D2", "#F7E270"]);
+    const permutations = getPermutations(["#20958E", "#AFD802", "#DF93D2", "#F7E270", "#B3EBF2"]);
 
     for (let permutation of permutations) {
         if (arrangements.every(arr => countMatches(arr.arrangement, permutation) === arr.matches)) {
@@ -36,6 +36,41 @@ function findTemplate(arrangements) {
     }
 
     return null;
+}
+
+function getNewPlay(originalArray, shuffledArray) {
+    // First, find the indices where the elements match between the two arrays
+    const lockedIndices = [];
+    for (let i = 0; i < originalArray.length; i++) {
+        if (originalArray[i] === shuffledArray[i]) {
+            lockedIndices.push(i);
+        }
+    }
+
+    // Create a list of indices that are not locked
+    const unlockedIndices = [];
+    for (let i = 0; i < shuffledArray.length; i++) {
+        if (!lockedIndices.includes(i)) {
+            unlockedIndices.push(i);
+        }
+    }
+
+    // Create an array with the elements that are not locked
+    const unlockedElements = unlockedIndices.map(index => shuffledArray[index]);
+
+    // Shuffle the unlocked elements
+    for (let i = unlockedElements.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [unlockedElements[i], unlockedElements[j]] = [unlockedElements[j], unlockedElements[i]];
+    }
+
+    // Place the shuffled elements back into their positions in the array
+    const resultArray = [...shuffledArray];
+    unlockedIndices.forEach((index, i) => {
+        resultArray[index] = unlockedElements[i];
+    });
+
+    return resultArray;
 }
 
 function getPermutations(array) {
@@ -139,7 +174,7 @@ exports.playerStatus = onRequest({ maxInstances: 10, cors: true, invoker: "publi
         let currentGame = await docRef.get()
         const bot = currentGame.data().players.find(player => player.id == "match-n-botter")
         if (bot.pattern.length == 0) {
-            let thisPlay = shuffleArray(["#20958E", "#AFD802", "#DF93D2", "#F7E270"])
+            let thisPlay = shuffleArray(["#20958E", "#AFD802", "#DF93D2", "#F7E270", "#B3EBF2"])
             const matches = matchChecker(thisPlay, currentGame.data().default)
             const isMatched = isIdentical(thisPlay, currentGame.data().default)
             bot.played = thisPlay
@@ -156,7 +191,7 @@ exports.playerStatus = onRequest({ maxInstances: 10, cors: true, invoker: "publi
             const played = await docRef.update({ players: newPlayers, turn: "0" })
             response.send(played)
         } else if (bot.pattern.length != 0) {
-            let thisPlay = findTemplate(bot.pattern)
+            let thisPlay = bot.level == "easy" ?  findTemplate(bot.pattern) : getNewPlay(currentGame.data().default, bot.pattern[bot.pattern.length-1].arrangement) //getNewPlay(currentGame.data().default, bot.pattern[bot.pattern.length-1].arrangement) //findTemplate(bot.pattern)
             // const hasWon = isIdentical(bot.played, currentGame.data().default)
             // if(hasWon) {
             //     return

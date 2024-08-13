@@ -19,7 +19,7 @@ export default function CreateGamePage() {
     const [gameState, setGameState] = useState<string>("")
     const [room, setRoom] = useState<string>("")
     const router = useRouter()
-    const pattern = ["#20958E", "#AFD802", "#DF93D2", "#F7E270"]
+    const pattern = ["#20958E", "#AFD802", "#DF93D2", "#F7E270", "#B3EBF2"]
     const [isCreated, setIsCreated] = useState<boolean>(false)
     const [loadError, setLoadError] = useState<boolean>(false)
     const [instructions, setInstructions] = useState(false);
@@ -120,7 +120,7 @@ export default function CreateGamePage() {
         const newGameData = {
             document: roomId,
             defaultPattern: defaultShuffle,
-            player: [{ id: playerID, pattern: shuffledPattern, nickname: gameDetails.nickname, played: ["", "", "", ""], roundsWon: "0" }],
+            player: [{ id: playerID, pattern: shuffledPattern, nickname: gameDetails.nickname, played: ["", "", "", "", ""], roundsWon: "0" }],
             isNew: true,
             isCpu: false
         }
@@ -167,7 +167,7 @@ export default function CreateGamePage() {
         const newGameData = {
             document: room,
             defaultPattern: [],
-            player: { id: playerID, pattern: shuffledPattern, nickname: gameDetails.nickname, played: ["", "", "", ""], roundsWon: "0" },
+            player: { id: playerID, pattern: shuffledPattern, nickname: gameDetails.nickname, played: ["", "", "", "", ""], roundsWon: "0" },
             isNew: false,
             isCpu: false
         }

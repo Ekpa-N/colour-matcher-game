@@ -15,6 +15,7 @@
     "@react-icons/all-files": "^4.1.0",
     "@react-oauth/google": "^0.12.1",
     "axios": "^1.7.2",
+    "dom-to-image": "^2.6.0",
     "dotenv": "^16.4.5",
     "firebase": "^10.12.1",
     "framer-motion": "^11.2.10",
@@ -29,6 +30,7 @@
     "uuid": "^9.0.1"
   },
   "devDependencies": {
+    "@types/dom-to-image": "^2.6.7",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
