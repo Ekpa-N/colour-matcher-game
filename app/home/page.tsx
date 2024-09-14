@@ -2,7 +2,7 @@
 import Image from "next/image";
 import ColourMatcher from "@/components/ColourMatcher";
 import AppContext from "@/components/Provider";
-import { useEffect, useState, useRef, ReactEventHandler, ReactHTMLElement, ChangeEvent } from "react";
+import { useEffect, useState, useRef, ReactEventHandler, ReactHTMLElement, ChangeEvent, useCallback } from "react";
 import { io } from 'socket.io-client';
 import { useRouter } from "next/navigation";
 import { db } from '@/firebase';
@@ -611,6 +611,38 @@ export default function PlayerHome() {
     setToChange(pattern[idx])
   }
 
+  function pickColor(idx: number, color: string) {
+    // debugger
+    const theCurrentPattern = currentPattern
+    const currentColor = pattern.find(item => color == item)
+    if (currentColor && currentColor == pattern[pattern.length - 1] || currentColor == undefined) {
+      theCurrentPattern[idx] = pattern[0]
+      // chooseColor(theCurrentPattern)
+      // chooseColor((currentState: any) => {
+      //   currentState = theCurrentPattern
+      //   return currentState
+      // })
+      setCurrentPattern((currentState) => {
+        currentState = theCurrentPattern
+        return currentState
+      })
+      return
+    }
+    theCurrentPattern[idx] = pattern[pattern.indexOf(color) + 1]
+    // chooseColor(theCurrentPattern)
+    // chooseColor((currentState: any) => {
+    //   currentState[idx] = pattern[pattern.indexOf(color) + 1]
+    //   return currentState
+    // })
+    setCurrentPattern((currentState) => {
+      currentState = theCurrentPattern
+      return currentState
+    })
+    return
+  }
+
+  // useCallback()
+
   if (isLoading) {
     return (
       <div className="flex w-full h-[600px] justify-center items-center">
@@ -649,20 +681,20 @@ export default function PlayerHome() {
 
         </div>
         <div className={`borde ${isLoading ? "hidden" : ""} text-center mt-[5px] h-[24px] w-[107px] ${isWon || hasWon ? "fanc" : ""}  ${winningPattern ? "" : ""}`}>
-          <ColourMatcher type="win" pattern={winningPattern} toChange={toChange} switchColour={switchColour} />
+          <ColourMatcher  type="win" pattern={winningPattern} toChange={toChange} switchColour={switchColour} pickColor={pickColor} />
         </div>
 
 
         <div className={`flex ${isLoading ? "hidden" : ""} borde flex-col items-center w-[245px] mt-[65px]  gap-[22px] relative`}>
-          <ColourMatcher type="play" pattern={currentPattern} toChange={toChange} switchColour={switchColour} />
-          <div className="border-t w-[259px] border-[#D4D8BE] top-[49%] absolute"></div>
-          <ColourMatcher type="default" pattern={pattern} toChange={toChange} switchColour={switchColour} />
+          <ColourMatcher type="play"  pattern={winningPattern} toChange={toChange} switchColour={switchColour} pickColor={pickColor} />
+          {/* <div className="border-t w-[259px] border-[#D4D8BE] top-[49%] absolute"></div>
+          <ColourMatcher type="default" pattern={pattern} toChange={toChange} switchColour={switchColour} pickColor={pickColor} /> */}
         </div>
       </div>
 
 
 
-      <button onClick={() => { play() }} className={`border ${isLoading ? "hidden" : ""} border-black active:bg-[#f6ebf4] ${turn ? "" : "text-[gray]"} active:text-[#338f1f] w-[328px] active:text-[#fff] h-[44px] rounded-[50px] font-be font-[600]`}>Play Your Selection</button>
+      <button onClick={() => { play() }} className={`border ${isLoading ? "hidden" : ""} border-black active:bg-[#f6ebf4] ${turn ? "" : "text-[gray]"} active:text-[#338f1f] w-[328px] active:text-[#fff] h-[44px] rounded-[50px] font-be font-[600]`}>Play Your Pattern</button>
       <div className="borde justify-end flex w-[328px] relative">
         <div id="countdown">
           <svg>

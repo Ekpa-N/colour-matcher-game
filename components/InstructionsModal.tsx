@@ -11,7 +11,7 @@ const styleTwo = {
     top: '40%',
     left: '50%',
     transform: 'translate(-50%, -50%)',
-    width: 350,
+    width: 380,
     height: 500,
     bgcolor: '#fffff0',
     boxShadow: 24,
@@ -77,31 +77,31 @@ export default function Instructions({ instructions, handleInstructionsClose, ha
                                             )
                                         })}
                                     </div>
-                                    <div className='flex gap-[5px]'>
+                                    {/* <div className='flex gap-[5px]'>
                                         {instructionButtons.map((button: string, idx: number) => {
                                             return (
                                                 <button style={{ backgroundColor: `${button}` }} key={idx} className={`w-[25px] flex justify-center items-center h-[25px] border bg-[#fffff0] text-[11px] border-[#D4D8BE] text-[#D4D8BE] rounded-[50%]`}>
                                                 </button>
                                             )
                                         })}
-                                    </div>
+                                    </div> */}
                                 </div>
                                 <div className='borde rounded-[10px] grow flex-col'>
                                     <div className='flex relative items-center'>
                                         <LiaLongArrowAltDownSolid className='h-[35px] relative text-[gray]' />
-                                        <p className='relative borde grow h-fit flex text-[13.5px] text-center'>Tap to set it anywhere here</p>
+                                        <p className='relative borde grow h-fit flex text-[13.5px] text-center'>Tap multiple times to set a color</p>
                                     </div>
-                                    <div className='flex relative items-center'>
+                                    {/* <div className='flex relative items-center'>
                                         <LiaLongArrowAltDownSolid className='h-[35px] relative text-[gray]' />
                                         <p className='relative borde grow h-fit flex text-[13.5px] text-center'>Tap to pick a colour here</p>
-                                    </div>
+                                    </div> */}
                                 </div>
                             </div>
                             <div className='flex mt-[5px] items-center'>
-                                <button className={`border border-black active:bg-[#f6ebf4] active:text-[#338f1f] w-[126px] active:text-[#fff] h-[15px] text-[12px] flex justify-center items-center rounded-[50px] font-be`}>Play Your Selection</button>
+                                <button className={`border border-black active:bg-[#f6ebf4] active:text-[#338f1f] w-[126px] active:text-[#fff] h-[15px] text-[12px] flex justify-center items-center rounded-[50px] font-be`}>Play Your Pattern</button>
                                 <div className='flex relative items-center'>
                                     <LiaLongArrowAltDownSolid className='h-[35px] relative text-[gray]' />
-                                    <p className='relative borde grow h-fit flex text-[13.5px] text-center'>Tap to play your selection</p>
+                                    <p className='relative borde grow h-fit flex text-[13.5px] text-center'>Tap to play your turn</p>
                                 </div>
                             </div>
                             <div className='flex mt-[5px] items-center'>

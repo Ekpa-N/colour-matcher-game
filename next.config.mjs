@@ -12,7 +12,10 @@ const nextConfig = {
     },
     images: { 
         unoptimized: true 
-    }
+    },
+    devIndicators: {
+        hostname: '0.0.0.0',
+      }
 };
 
 export default nextConfig;
