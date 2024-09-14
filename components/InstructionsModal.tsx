@@ -164,7 +164,7 @@ export default function Instructions({ instructions, handleInstructionsClose, ha
                                 </div>
                                 <div className='flex relative items-center'>
                                     <LiaLongArrowAltDownSolid className='h-[35px] relative text-[gray]' />
-                                    <p className='relative borde grow h-fit flex text-[13.5px] text-center'>Tap to copy game link</p>
+                                    <p className='relative borde grow h-fit flex text-[13.5px] text-center'>Tap for game link to share</p>
                                 </div>
                             </div>
                             <div className='flex mt-[5px] items-center'>
