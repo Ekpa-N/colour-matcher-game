@@ -66,7 +66,7 @@ const ColourMatcher: React.FC<ColourProps> = ({ pattern = [], toChange, switchCo
     };
 
     return (
-        <div className={`border-blac w-[100%] flex justify-between ${type == "win" ? "rounded-[20px] border" : "rounded-[30px]"} p-[2px]`}>
+        <div className={`border-blac w-[100%] flex justify-between ${type == "win" ? "rounded-[20px] border" : "rounded-[10px] border-2 "} p-[2px]`}>
             {pattern.map((colour: string, idx: number) => {
 
                 if (type == "win") {
