@@ -146,7 +146,7 @@ exports.createGame = onRequest({ maxInstances: 10, cors: true, invoker: "public"
     const docRef = db.collection('games').doc(document)
     if (isNew) {
         let thisPlayer = { ...player[0], isOwner: true }
-        gameCreated = await docRef.set({ default: defaultPattern, players: [thisPlayer], turn: "0", round: "1", ownerLogged: false, owner: player[0].nickname, timed: false, cpu: false })
+        gameCreated = await docRef.set({ default: defaultPattern, players: [thisPlayer], turn: "0", round: "1", ownerLogged: false, owner: player[0].nickname, timed: false, cpu: false, justMatched: [{ nickname: player[0].nickname, matched: 0, pattern: ["", "", "", "", ""] }] })
     }
     if (!isNew) {
         let thisPlayer = { ...player, isOwner: false }
@@ -154,9 +154,9 @@ exports.createGame = onRequest({ maxInstances: 10, cors: true, invoker: "public"
         let newPlayers = currentGame.data().players.filter(player => player.id != "match-n-botter")
         newPlayers.push(thisPlayer)
         if (isCpu) {
-            gameCreated = await docRef.update({ players: FieldValue.arrayUnion(thisPlayer), cpu: true, timed: false })
+            gameCreated = await docRef.update({ players: FieldValue.arrayUnion(thisPlayer), cpu: true, timed: false, justMatched: FieldValue.arrayUnion({ nickname: thisPlayer.nickname, matched: 0, pattern: ["", "", "", "", ""] }) })
         } else {
-            gameCreated = await docRef.update({ players: newPlayers, cpu: false })
+            gameCreated = await docRef.update({ players: newPlayers, cpu: false, justMatched: FieldValue.arrayUnion({ nickname: player.nickname, matched: 0, pattern: ["", "", "", "", ""] }) })
         }
     }
     response.send(gameCreated)
@@ -188,10 +188,22 @@ exports.playerStatus = onRequest({ maxInstances: 10, cors: true, invoker: "publi
                 }
                 return player
             })
-            const played = await docRef.update({ players: newPlayers, turn: "0" })
+            const justMatched = currentGame.data().justMatched.map((item) => {
+                if (item.nickname === bot.nickname) {
+                    item.matched = matches
+                    item.pattern = thisPlay
+                    return item
+                }
+                return item
+            })
+            const played = await docRef.update({
+                players: newPlayers,
+                turn: "0",
+                justMatched: justMatched
+            })
             response.send(played)
         } else if (bot.pattern.length != 0) {
-            let thisPlay = bot.level == "easy" ?  findTemplate(bot.pattern) : getNewPlay(currentGame.data().default, bot.pattern[bot.pattern.length-1].arrangement) //getNewPlay(currentGame.data().default, bot.pattern[bot.pattern.length-1].arrangement) //findTemplate(bot.pattern)
+            let thisPlay = bot.level == "easy" ? findTemplate(bot.pattern) : getNewPlay(currentGame.data().default, bot.pattern[bot.pattern.length - 1].arrangement) //getNewPlay(currentGame.data().default, bot.pattern[bot.pattern.length-1].arrangement) //findTemplate(bot.pattern)
             // const hasWon = isIdentical(bot.played, currentGame.data().default)
             // if(hasWon) {
             //     return
@@ -209,7 +221,20 @@ exports.playerStatus = onRequest({ maxInstances: 10, cors: true, invoker: "publi
                 }
                 return player
             })
-            const played = await docRef.update({ players: newPlayers, turn: "0" })
+
+            const justMatched = currentGame.data().justMatched.map((item) => {
+                if (item.nickname === bot.nickname) {
+                    item.matched = matches
+                    item.pattern = thisPlay
+                    return item
+                }
+                return item
+            })
+            const played = await docRef.update({
+                players: newPlayers,
+                turn: "0",
+                justMatched: justMatched
+            })
             response.send(played)
         }
     }

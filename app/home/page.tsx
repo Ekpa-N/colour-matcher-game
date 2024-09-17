@@ -122,6 +122,7 @@ export default function PlayerHome() {
   const [urlCopied, setUrlCopied] = useState<boolean>(false)
   const [instructionsPage, setInstructionsPage] = useState<number>(1)
   const [bot, setBot] = useState<{ name: string, form: boolean, loading: boolean, error: boolean, level: string }>({ name: "Bot 1", form: false, loading: false, error: false, level: "easy" })
+  const [currentPlayDetails, setCurrentPlayDetails] = useState<{ justMatched: any[] }>({ justMatched: []})
 
 
   const handleInstructionsPage = (page: number) => {
@@ -218,11 +219,11 @@ export default function PlayerHome() {
       defaultPattern: [],
       player: { id: "match-n-botter", pattern: [], nickname: bot.name, played: ["", "", "", "", ""], roundsWon: "0", level: bot.level },
       isNew: false,
-      isCpu: true
+      isCpu: true,
     }
 
     try {
-      const newGame = await axios.post(`${process.env.newGame}`, newBotData, {
+      const newGame = await axios.post(`http://127.0.0.1:5001/colour-matcher-2e7cd/us-central1/createGame`, newBotData, { // http://127.0.0.1:5001/colour-matcher-2e7cd/us-central1/createGame ${process.env.newGame}
         headers: {
           "Content-Type": "application/json"
         }
@@ -260,34 +261,34 @@ export default function PlayerHome() {
   };
   useEffect(() => {
     if (localData.playerId != "") {
-      const newSocket = io("https://colour-matcher-server-811abd218ab9.herokuapp.com", { // http://localhost:3004 http://192.168.0.101:3004  https://colour-matcher-server-811abd218ab9.herokuapp.com
-        // path: "/home",
-        query: {
-          nickname: localData.nickname,
-          room: localData.roomId,
-          playerID: localData.playerId
-        }
-      })
+      // const newSocket = io("https://colour-matcher-server-811abd218ab9.herokuapp.com", { // http://localhost:3004 http://192.168.0.101:3004  https://colour-matcher-server-811abd218ab9.herokuapp.com
+      //   // path: "/home",
+      //   query: {
+      //     nickname: localData.nickname,
+      //     room: localData.roomId,
+      //     playerID: localData.playerId
+      //   }
+      // })
 
-      setSocket(newSocket)
+      // setSocket(newSocket)
     }
   }, [localData])
 
-  useEffect(() => {
-    const showStatus = setInterval(() => {
-      setPlayerStatus([])
-    }, 3000)
-    if (socket) {
-      socket.on("receive_message", (data: any) => {
-        setPlayerStatus(prevStatus => [...prevStatus, data])
-        console.log("message from socket: ", data)
-      })
-      socket.on("turn", (data: any) => {
-        console.log("Turn Status: ", data)
-      })
-    }
-    return () => clearInterval(showStatus)
-  }, [socket])
+  // useEffect(() => {
+  //   const showStatus = setInterval(() => {
+  //     setPlayerStatus([])
+  //   }, 3000)
+  //   if (socket) {
+  //     socket.on("receive_message", (data: any) => {
+  //       setPlayerStatus(prevStatus => [...prevStatus, data])
+  //       console.log("message from socket: ", data)
+  //     })
+  //     socket.on("turn", (data: any) => {
+  //       console.log("Turn Status: ", data)
+  //     })
+  //   }
+  //   return () => clearInterval(showStatus)
+  // }, [socket])
 
   function changeTurn(turnStatus: boolean) {
     socket.emit("start_game", { turn: turnStatus })
@@ -345,9 +346,9 @@ export default function PlayerHome() {
 
   async function endGame() {
     const dataRef = doc(db, "games", localData.roomId)
-    socket.emit("start_game", { turn: false })
+    // socket.emit("start_game", { turn: false })
     const killRoomTimeout = setTimeout(() => {
-      socket.emit("end_game", { roomId: localData.roomId })
+      // socket.emit("end_game", { roomId: localData.roomId })
       clearTimeout(killRoomTimeout)
     }, 3000)
     // socket.disconnect()
@@ -413,12 +414,12 @@ export default function PlayerHome() {
           players: newPlayers,
           turn: currentTurn.toString()
         })
-        socket.disconnect()
+        // socket.disconnect()
       } else {
         await updateDoc(dataRef, {
           players: newPlayers
         })
-        socket.disconnect()
+        // socket.disconnect()
       }
     } else {
       console.log("No such document!");
@@ -460,6 +461,7 @@ export default function PlayerHome() {
     }
     if (error && error.hasOwnProperty("played")) {
       // setCurrentPattern(error.played)
+      setCurrentPlayDetails({justMatched: error.justMatched})
       setCurrentRound(error.currentRound)
       setIsWon(error.isWon)
       setTurn(error.isTurn)
@@ -472,7 +474,7 @@ export default function PlayerHome() {
       setLeaderboard(error.leaderBoard.sort((a: any, b: any) => Number(b.rounds) - Number(a.rounds)))
       // if (error.ownership) {
       // let allPlayersList = [{ nickName: "", id: "" }]
-      setAllPlayers(error.ownership.filter((player: any) => player.id != localData.playerId))
+      setAllPlayers(error.ownership) // .filter((player: any) => player.id != localData.playerId)
       // }
       if (error.isOwner) {
         setIsCpuActive(error.cpu)
@@ -487,11 +489,11 @@ export default function PlayerHome() {
           setInsult(getInsult(loserInsults))
         }
         setTimer("")
-        socket.emit("start_game", { turn: false })
+        // socket.emit("start_game", { turn: false })
         handleOpen()
       } else {
         if (error.isTimed) {
-          socket.emit("start_game", { turn: error.nextTurn.toString(), roomId: localData.roomId })
+          // socket.emit("start_game", { turn: error.nextTurn.toString(), roomId: localData.roomId })
           if (error.isTurn) {
             setTimer("timer")
           } else {
@@ -499,7 +501,7 @@ export default function PlayerHome() {
           }
         } else {
           setTimer("")
-          socket.emit("start_game", { turn: false })
+          // socket.emit("start_game", { turn: false })
         }
         setWinningPattern(error.played)
         handleClose()
@@ -537,14 +539,25 @@ export default function PlayerHome() {
         }
         return player
       })
+      const template = gameDoc.data().default
+      const currentMatchCount = matchChecker(currentPattern, template)
+      const justMatched = gameDoc.data().justMatched.map((item: any) => {
+        if (item.nickname === thisPlayer.nickname) {
+          item.matched = currentMatchCount
+          item.pattern = currentPattern
+          return item
+        }
+        return item
+      })
+      // debugger
+      
       await updateDoc(dataRef, {
         players: newPlayers,
-        turn: newTurn.toString()
+        turn: newTurn.toString(),
+        justMatched: justMatched
       })
 
 
-      const template = gameDoc.data().default
-      const currentMatchCount = matchChecker(currentPattern, template)
       setMatchCount(currentMatchCount)
       // console.log("The match count is: ", matchCount)
       setCurrentPattern(["", "", "", "", ""])
@@ -565,6 +578,11 @@ export default function PlayerHome() {
   }
 
   async function reset(action?: string) {
+    const newJustMatched = currentPlayDetails.justMatched.map((item: any)=>{
+      item.pattern = ["", "", "", "", ""]
+      item.matched = "0"
+      return item
+    })
     setMatchCount(0)
     if (!isWon && !hasWon) {
       console.log("reset clicked")
@@ -593,7 +611,8 @@ export default function PlayerHome() {
         players: playsReset,
         turn: isCpuActive ? "0" : Math.floor(Math.random() * thePlayers.length).toString(),
         default: newDefault,
-        round: action == "reset" ? "0" : nextRound.toString()
+        round: action == "reset" ? "0" : nextRound.toString(),
+        justMatched: newJustMatched
       })
       handleClose()
       console.log("Reset")
@@ -672,23 +691,38 @@ export default function PlayerHome() {
       </div>
 
 
-      <div className="flex relative flex-col border border-black rounded-[7px] w-[90%] md:w-[400px] pb-[27px] items-center justify-start pt-[17px] px-[2px]">
+      <div className="flex relative flex-col border border-black rounded-[7px] w-[90%] md:w-[400px] pb-[27px] items-center justify-start pt-[5px] px-[2px]">
         <div className="flex gap-[11px] relative items-center">
           <div className={`${isLoading ? "hidden" : ""} border border-black rounded-[10px] font-[700] flex justify-center items-center text-center font-be text-[8px] h-[20px] px-[6px] w-fit`}>
             {`${ownerLogged ? (isWon ? "You have won this round!" : hasWon ? hasWon : turn ? "Your turn" : isPlaying) : `waiting for "our majesty", ${owner}, to majestically join`}`}
           </div>
-          <div className={` ${isLoading ? "hidden" : "border border-black rounded-[10px] font-[700] flex justify-center items-center text-center font-be text-[7px] px-[6px] h-[20px] w-fit"}`}>You matched {matchCount}</div>
-
-        </div>
-        <div className={`borde ${isLoading ? "hidden" : ""} text-center mt-[5px] h-[24px] w-[107px] ${isWon || hasWon ? "fanc" : ""}  ${winningPattern ? "" : ""}`}>
-          <ColourMatcher  type="win" pattern={winningPattern} toChange={toChange} switchColour={switchColour} pickColor={pickColor} />
         </div>
 
+        <div className="borde border-black min-h-[10px] min-w-[20px] mt-[5px] flex gap-[10px]">
+          {/* <div className="flex flex-col items-center">
+            <div className={` ${isLoading ? "hidden" : "border border-black rounded-[10px] font-[700] flex justify-center items-center text-center font-be text-[7px] px-[6px] h-[20px] w-fit"}`}>You matched {matchCount}</div>
+            <div className={`borde ${isLoading ? "hidden" : ""} text-center mt-[5px] h-[24px] w-[107px] ${isWon || hasWon ? "fanc" : ""}  ${winningPattern ? "" : ""}`}>
+              <ColourMatcher type="win" pattern={winningPattern} toChange={toChange} switchColour={switchColour} pickColor={pickColor} />
+            </div>
+          </div> */}
+          {currentPlayDetails.justMatched.map((player: any, index: number) => {
+            return (
+              <div key={index} className="flex flex-col items-center">
+                <div className={` ${isLoading ? "hidden" : "border border-black rounded-[10px] font-[700] flex justify-center items-center text-center font-be text-[7px] px-[6px] h-[20px] w-fit"}`}>{player.nickname == localData.nickname ? "You" : player.nickname} matched {player.matched}</div>
+                <div className={`borde ${isLoading ? "hidden" : ""} text-center mt-[5px] h-[24px] w-[107px] ${isWon || hasWon ? "fanc" : ""}  ${winningPattern ? "" : ""}`}>
+                  <ColourMatcher type="win" pattern={player.pattern} toChange={toChange} switchColour={switchColour} pickColor={pickColor} />
+                </div>
+              </div>
+            )
+          })}
+        </div>
 
-        <div className={`flex ${isLoading ? "hidden" : ""} borde flex-col items-center w-[245px] mt-[65px]  gap-[22px] relative`}>
-          <ColourMatcher type="play"  pattern={winningPattern} toChange={toChange} switchColour={switchColour} pickColor={pickColor} />
-          {/* <div className="border-t w-[259px] border-[#D4D8BE] top-[49%] absolute"></div>
-          <ColourMatcher type="default" pattern={pattern} toChange={toChange} switchColour={switchColour} pickColor={pickColor} /> */}
+
+
+        <div className={`flex ${isLoading ? "hidden" : ""} borde flex-col items-center w-[245px] mt-[65px]  gap-[10px] relative`}>
+          <ColourMatcher type="play" pattern={winningPattern} toChange={toChange} switchColour={switchColour} pickColor={pickColor} />
+          {/* <div className="border-t w-[259px] border-[#D4D8BE]"></div> */}
+          {/* <ColourMatcher type="default" pattern={pattern} toChange={toChange} switchColour={switchColour} pickColor={pickColor} /> */}
         </div>
       </div>
 
@@ -837,7 +871,7 @@ export default function PlayerHome() {
                 <option value="hard">Competitive</option>
               </select>
             </div>
-            <Button disabled={bot.loading} sx={addBotButton} onClick={() => { isCpuActive ? updateCpu() : addCpu() }} className={`border border-black ml-[10px]`}>{bot.error ? `Couldn't reach ${bot.name}, try again` : bot.loading ? `Calling ${bot.name}` : `add ${bot.name}`}</Button>
+            <Button disabled={allPlayers.length > 1 || bot.loading} sx={addBotButton} onClick={() => { isCpuActive ? updateCpu() : addCpu() }} className={`border border-black ml-[10px]`}>{bot.error ? `Couldn't reach ${bot.name}, try again` : bot.loading ? `Calling ${bot.name}` : `add ${bot.name}`}</Button>
           </Box>
         </Box>
       </Modal>

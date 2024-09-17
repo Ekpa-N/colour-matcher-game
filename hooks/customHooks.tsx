@@ -67,6 +67,7 @@ function useSubscription({ playerInfo, socket = "" }: useSubscriptionProps) {
                         const currentRound = docSnapshot.data().round
                         const isTimed = docSnapshot.data().timed
                         const isCpu = docSnapshot.data().cpu
+                        const currentPlayerList = docSnapshot.data().justMatched.filter((name: any) => allPlayers.map((item: any) => item.nickName).includes(name.nickname) )  
                         thisPlayer = {
                             ...thisPlayer,
                             isWon: isWon,
@@ -82,7 +83,10 @@ function useSubscription({ playerInfo, socket = "" }: useSubscriptionProps) {
                             owner: owner,
                             nextTurn: nextTurn,
                             isTimed: isTimed,
-                            cpu: isCpu
+                            cpu: isCpu,
+                            justMatched: currentPlayerList //docSnapshot.data().justMatched,                             
+                            // justPlayed: docSnapshot.data().justPlayed,                             
+                            // justPlayedPattern: docSnapshot.data().justPlayedPattern,                             
                         }
                         // if (Number(currentTurn) == 1 && isCpu && !hasWon) {
                         //     // debugger
@@ -104,7 +108,7 @@ function useSubscription({ playerInfo, socket = "" }: useSubscriptionProps) {
                             let attempts = 0;
                             while (attempts < 3) {
                                 try {
-                                    const cpuPlay = await axios.post("https://playerstatus-djhwq4ivna-uc.a.run.app", { roomID: playerData.roomId, action: "play" }, {
+                                    const cpuPlay = await axios.post("http://127.0.0.1:5001/colour-matcher-2e7cd/us-central1/playerStatus", { roomID: playerData.roomId, action: "play" }, { // http://127.0.0.1:5001/colour-matcher-2e7cd/us-central1/playerStatus https://playerstatus-djhwq4ivna-uc.a.run.app
                                         headers: {
                                             "Content-Type": "application/json"
                                         }
