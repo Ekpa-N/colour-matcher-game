@@ -4,6 +4,7 @@ import { Box, Modal, Typography } from "@mui/material"
 import { LiaLongArrowAltDownSolid } from "react-icons/lia"
 import Image from "next/image";
 import { RiRobot3Line } from "react-icons/ri";
+import { FaAngleRight, FaAngleDown, FaAngleUp, FaAngleLeft } from "react-icons/fa6";
 
 
 const styleTwo = {
@@ -224,9 +225,11 @@ export default function Instructions({ instructions, handleInstructionsClose, ha
                         </div>
 
                         <div style={navi} className="flex absolute gap-[3px] bottom-[5px]">
-                            <button onClick={() => { handleInstructionsPage(1) }} className={`w-[20px] h-[20px] border ${instructionsPage == 1 ? "bg-[gray]" : "bg-[lightgray]"}  text-[#000080]  rounded-[50%]`}>
+                            <button onClick={() => { handleInstructionsPage(1) }} className={`w-[20px] h-[20px] border ${instructionsPage == 1 ? "bg-[gray]" : "bg-[lightgray]"}  text-[#000080] flex items-center justify-center rounded-[50%]`}>
+                                <FaAngleDown className={`h-[15px] relative ${instructionsPage == 1 ? "text-[lightgray]" : "text-[gray]"}`} />
                             </button>
-                            <button onClick={() => { handleInstructionsPage(2) }} className={`w-[20px] h-[20px] border  ${instructionsPage == 2 ? "bg-[gray]" : "bg-[lightgray]"} text-[#000080]  rounded-[50%]`}>
+                            <button onClick={() => { handleInstructionsPage(2) }} className={`w-[20px] h-[20px] border  ${instructionsPage == 2 ? "bg-[gray]" : "bg-[lightgray]"} text-[#000080] flex items-center justify-center rounded-[50%]`}>
+                                <FaAngleUp className={`h-[15px] relative ${instructionsPage == 2 ? "text-[lightgray]" : "text-[gray]"}`} />
                             </button>
                         </div>
                     </Box>

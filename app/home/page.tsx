@@ -871,7 +871,7 @@ export default function PlayerHome() {
                 <option value="hard">Competitive</option>
               </select>
             </div>
-            <Button disabled={allPlayers.length > 1 || bot.loading} sx={addBotButton} onClick={() => { isCpuActive ? updateCpu() : addCpu() }} className={`border border-black ml-[10px]`}>{bot.error ? `Couldn't reach ${bot.name}, try again` : bot.loading ? `Calling ${bot.name}` : `add ${bot.name}`}</Button>
+            <Button disabled={(!isCpuActive && allPlayers.length > 1) || bot.loading} sx={addBotButton} onClick={() => { isCpuActive ? updateCpu() : addCpu() }} className={`border border-black ml-[10px]`}>{bot.error ? `Couldn't reach ${bot.name}, try again` : bot.loading ? `Calling ${bot.name}` : `add ${bot.name}`}</Button>
           </Box>
         </Box>
       </Modal>
