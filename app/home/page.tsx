@@ -223,7 +223,7 @@ export default function PlayerHome() {
     }
 
     try {
-      const newGame = await axios.post(`http://127.0.0.1:5001/colour-matcher-2e7cd/us-central1/createGame`, newBotData, { // http://127.0.0.1:5001/colour-matcher-2e7cd/us-central1/createGame ${process.env.newGame}
+      const newGame = await axios.post(`${process.env.newGame}`, newBotData, { // http://127.0.0.1:5001/colour-matcher-2e7cd/us-central1/createGame ${process.env.newGame}
         headers: {
           "Content-Type": "application/json"
         }
