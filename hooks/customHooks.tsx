@@ -68,6 +68,7 @@ function useSubscription({ playerInfo, socket = "" }: useSubscriptionProps) {
                         const isTimed = docSnapshot.data().timed
                         const isCpu = docSnapshot.data().cpu
                         const currentPlayerList = docSnapshot.data().justMatched.filter((name: any) => allPlayers.map((item: any) => item.nickName).includes(name.nickname) )  
+                        // debugger
                         thisPlayer = {
                             ...thisPlayer,
                             isWon: isWon,
@@ -108,7 +109,7 @@ function useSubscription({ playerInfo, socket = "" }: useSubscriptionProps) {
                             let attempts = 0;
                             while (attempts < 3) {
                                 try {
-                                    const cpuPlay = await axios.post("https://playerstatus-djhwq4ivna-uc.a.run.app", { roomID: playerData.roomId, action: "play" }, { // http://127.0.0.1:5001/colour-matcher-2e7cd/us-central1/playerStatus https://playerstatus-djhwq4ivna-uc.a.run.app
+                                    const cpuPlay = await axios.post("https://playerstatus-ax2qa3lxma-uc.a.run.app", { roomID: playerData.roomId, action: "play" }, { // http://127.0.0.1:5001/colour-matcher/us-central1/playerStatus https://playerstatus-djhwq4ivna-uc.a.run.app
                                         headers: {
                                             "Content-Type": "application/json"
                                         }

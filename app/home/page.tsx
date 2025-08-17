@@ -184,8 +184,16 @@ export default function PlayerHome() {
           }
           return player
         })
+
+        const justMatched = gameDoc.data().justMatched.map((item: any, index: any)=>{
+          if(index == 1) {
+            item.nickname = bot.name
+          }          
+          return item
+        })
         await updateDoc(dataRef, {
-          players: newPlayers
+          players: newPlayers,
+          justMatched: justMatched
         })
         setBot({ ...bot, loading: false })
         handleBotFormClose()
@@ -221,9 +229,10 @@ export default function PlayerHome() {
       isNew: false,
       isCpu: true,
     }
+    // debugger
 
     try {
-      const newGame = await axios.post(`${process.env.newGame}`, newBotData, { // http://127.0.0.1:5001/colour-matcher-2e7cd/us-central1/createGame ${process.env.newGame}
+      const newGame = await axios.post(`https://creategame-ax2qa3lxma-uc.a.run.app`, newBotData, { // http://127.0.0.1:5001/colour-matcher/us-central1/createGame ${process.env.newGame}
         headers: {
           "Content-Type": "application/json"
         }
@@ -750,7 +759,7 @@ export default function PlayerHome() {
           {allPlayers && allPlayers.map((player: any, idx: number) => {
             return (
               <div key={idx} className="flex items-center gap-[5px]">
-                <button onClick={() => { evictPlayer(player.id) }} className={`w-[13px] h-[13px] cursor-pointer  rounded-[50%] bg-[#F86464] ${isOwner ? "flex" : "hidden"} justify-center items-center`}>
+                <button onClick={() => { evictPlayer(player.id) }} className={`w-[13px] h-[13px] cursor-pointer  rounded-[50%] bg-[#F86464] ${(isOwner && localData.nickname != player.nickName ) ? "flex" : "hidden"} justify-center items-center`}>
                   <div className="bg-white h-[2px] w-[8px] rounded-[2px]"></div>
                 </button>
                 <h2>{player.nickName}</h2>
@@ -809,7 +818,7 @@ export default function PlayerHome() {
             <Image className="cursor-pointer" alt="Players" fill={true} src="../icons/copy-link.svg" />
           </div>
         </button>
-        <button onClick={() => { handleBotFormOpen() }} className={`${isOwner ? "relative w-[30px] h-[30px]" : "hidden"}  pt-[2px] active:border rounded-[5px] active:border-[lightgreen] ${isCpuActive ? "border border-[lightgreen]" : ""} flex items-center justify-center`}>
+        <button disabled={isCpuActive} onClick={() => { handleBotFormOpen() }} className={`${isOwner ? "relative w-[30px] h-[30px]" : "hidden"}  pt-[2px] active:border rounded-[5px] active:border-[lightgreen] ${isCpuActive ? "border border-[lightgreen]" : ""} flex items-center justify-center`}>
           <div className="w-[30px] h-[30px] relative borde">
             <RiRobot3Line className={`-rotate-[90] ${isCpuActive ? "text-[lightgreen]" : "text-[red]"} w-[28px] h-[28px]`} />
           </div>
